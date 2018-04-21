@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+sockpuppet/*/__pycache__
+sockpuppet/__pycache__
 
 # C extensions
 *.so
@@ -99,3 +101,8 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+node_modules/
+manifest.json
+webpack/manifest.json
+package-lock.json
