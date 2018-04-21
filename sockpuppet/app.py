@@ -2,8 +2,8 @@
 """The app module, containing the app factory function."""
 from flask import Flask, render_template
 
-from sockpuppet import commands, public, user
-from sockpuppet.extensions import bcrypt, cache, csrf_protect, db, debug_toolbar, login_manager, migrate, webpack
+from sockpuppet import commands, public, user, rest
+from sockpuppet.extensions import api, bcrypt, cache, csrf_protect, db, debug_toolbar, login_manager, migrate, webpack
 from sockpuppet.settings import ProdConfig
 
 
@@ -24,6 +24,7 @@ def create_app(config_object=ProdConfig):
 
 def register_extensions(app):
     """Register Flask extensions."""
+    api.init_app(rest.poc.blueprint)
     bcrypt.init_app(app)
     cache.init_app(app)
     db.init_app(app)
@@ -32,6 +33,9 @@ def register_extensions(app):
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
     webpack.init_app(app)
+
+    api.add_resource(rest.poc.HelloWorld, "/api/get")
+
     return None
 
 
@@ -39,6 +43,7 @@ def register_blueprints(app):
     """Register Flask blueprints."""
     app.register_blueprint(public.views.blueprint)
     app.register_blueprint(user.views.blueprint)
+    app.register_blueprint(rest.poc.blueprint)
     return None
 
 
