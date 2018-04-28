@@ -4,7 +4,7 @@ from flask_restful import Resource, reqparse
 
 parser = reqparse.RequestParser()
 parser.add_argument('rate', type=int, help='Rate to charge for this resource')
-args = parser.parse_args()
+
 
 blueprint = Blueprint("api", __name__)
 
@@ -17,4 +17,8 @@ class ProofOfConcept(Resource):
         self.twitter = twitter
 
     def get(self):
-        return {'hello': 'world'}
+        args = parser.parse_args()
+        return {
+            'hello': 'world',
+            'args': args,
+        }
