@@ -3,6 +3,7 @@
 from flask import Flask, render_template
 
 from sockpuppet import commands, public, user, rest
+from sockpuppet.twitter import twitter
 from sockpuppet.extensions import api, bcrypt, cache, csrf_protect, db, debug_toolbar, login_manager, migrate, webpack
 from sockpuppet.settings import ProdConfig
 
@@ -19,6 +20,7 @@ def create_app(config_object=ProdConfig):
     register_errorhandlers(app)
     register_shellcontext(app)
     register_commands(app)
+    init_twitter(app, config_object)
     return app
 
 
@@ -34,7 +36,7 @@ def register_extensions(app):
     migrate.init_app(app, db)
     webpack.init_app(app)
 
-    api.add_resource(rest.poc.HelloWorld, "/api/get")
+    api.add_resource(rest.poc.ProofOfConcept, "/get", (twitter,))
 
     return None
 
@@ -43,7 +45,7 @@ def register_blueprints(app):
     """Register Flask blueprints."""
     app.register_blueprint(public.views.blueprint)
     app.register_blueprint(user.views.blueprint)
-    app.register_blueprint(rest.poc.blueprint)
+    app.register_blueprint(rest.poc.blueprint, url_prefix="/api/0")
     return None
 
 
@@ -76,3 +78,15 @@ def register_commands(app):
     app.cli.add_command(commands.lint)
     app.cli.add_command(commands.clean)
     app.cli.add_command(commands.urls)
+
+
+def init_twitter(app, config_object):
+    twitter.SetCacheTimeout(config_object.TWITTER_CACHE_TIMEOUT)
+    twitter.SetCredentials(
+        config_object.TWITTER_CONSUMER_KEY,
+        config_object.TWITTER_CONSUMER_SECRET,
+        config_object.TWITTER_ACCESS_TOKEN,
+        config_object.TWITTER_ACCESS_TOKEN_SECRET
+    )
+
+    app.logger.info(twitter.VerifyCredentials(False))

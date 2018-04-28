@@ -38,3 +38,7 @@ Flask-DebugToolbar==0.10.1
 
 # REST API
 flask-restful
+
+# Twitter
+requests
+python-twitter

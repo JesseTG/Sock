@@ -15,7 +15,9 @@
   },
   "author": "Jesse Talavera-Greenberg",
   "license": "BSD-3-Clause",
-  "engines": { "node" : ">=4" },
+  "engines": {
+    "node": ">=4"
+  },
   "bugs": {
     "url": "https://github.com/JesseTG/sockpuppet/issues"
   },
