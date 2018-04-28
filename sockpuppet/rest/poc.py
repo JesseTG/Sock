@@ -20,5 +20,5 @@ class ProofOfConcept(Resource):
         args = parser.parse_args()
         return {
             'hello': 'world',
-            'args': args,
+            'args': str(args),
         }
