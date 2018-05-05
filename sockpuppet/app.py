@@ -3,9 +3,9 @@
 from flask import Flask, render_template
 
 from sockpuppet import commands, public, user, rest
-from sockpuppet.twitter import twitter
 from sockpuppet.extensions import api, bcrypt, cache, csrf_protect, db, debug_toolbar, login_manager, migrate, webpack
 from sockpuppet.settings import ProdConfig
+from botometer import Botometer
 
 
 def create_app(config_object=ProdConfig):
@@ -20,7 +20,7 @@ def create_app(config_object=ProdConfig):
     register_errorhandlers(app)
     register_shellcontext(app)
     register_commands(app)
-    init_twitter(app, config_object)
+    register_botometer(app, config_object)
     return app
 
 
@@ -36,6 +36,7 @@ def register_extensions(app):
     migrate.init_app(app, db)
     webpack.init_app(app)
 
+    # TODO: Can I do this in a more idiomatic way?
     api.add_resource(rest.poc.ProofOfConcept, "/get")
 
     return None
@@ -80,13 +81,12 @@ def register_commands(app):
     app.cli.add_command(commands.urls)
 
 
-def init_twitter(app, config_object):
-    twitter.SetCacheTimeout(config_object.TWITTER_CACHE_TIMEOUT)
-    twitter.SetCredentials(
-        config_object.TWITTER_CONSUMER_KEY,
-        config_object.TWITTER_CONSUMER_SECRET,
-        config_object.TWITTER_ACCESS_TOKEN,
-        config_object.TWITTER_ACCESS_TOKEN_SECRET
+def register_botometer(app, config_object):
+    app.botometer = Botometer(
+        wait_on_ratelimit=True,
+        mashape_key=config_object.MASHAPE_KEY,
+        consumer_key=config_object.TWITTER_CONSUMER_KEY,
+        consumer_secret=config_object.TWITTER_CONSUMER_SECRET,
+        access_token=config_object.TWITTER_ACCESS_TOKEN,
+        access_token_secret=config_object.TWITTER_ACCESS_TOKEN_SECRET
     )
-
-    app.logger.info(twitter.VerifyCredentials(include_entities=False, skip_status=True))

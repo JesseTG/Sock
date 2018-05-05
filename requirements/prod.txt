@@ -40,5 +40,4 @@ Flask-DebugToolbar==0.10.1
 flask-restful
 
 # Twitter
-requests
-python-twitter
+botometer
