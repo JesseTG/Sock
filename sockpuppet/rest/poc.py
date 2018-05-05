@@ -1,9 +1,23 @@
 import requests
-from flask import Blueprint, Flask
-from flask_restful import Resource, reqparse
+from flask import Blueprint, Flask, current_app
+from flask_restful import Resource, reqparse, fields, inputs
+
+
+def parse_ids(ids_arg):
+
+    ids = tuple(map(inputs.natural, ids_arg.split(',')))
+
+    return ids
+
 
 parser = reqparse.RequestParser()
-parser.add_argument('rate', type=int, help='Rate to charge for this resource')
+parser.add_argument(
+    'ids',
+    type=parse_ids,
+    nullable=False,
+    required=True,
+    trim=True
+)
 
 
 blueprint = Blueprint("api", __name__)
@@ -18,7 +32,8 @@ class ProofOfConcept(Resource):
 
     def get(self):
         args = parser.parse_args()
+        current_app.logger.info(args)
         return {
             'hello': 'world',
-            'args': str(args),
+            'args': args,
         }
