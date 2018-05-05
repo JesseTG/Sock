@@ -13,8 +13,8 @@ blueprint = Blueprint("api", __name__)
 
 
 class ProofOfConcept(Resource):
-    def __init__(self, twitter):
-        self.twitter = twitter
+    def __init__(self):
+        pass
 
     def get(self):
         args = parser.parse_args()

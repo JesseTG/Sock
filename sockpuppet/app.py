@@ -36,7 +36,7 @@ def register_extensions(app):
     migrate.init_app(app, db)
     webpack.init_app(app)
 
-    api.add_resource(rest.poc.ProofOfConcept, "/get", (twitter,))
+    api.add_resource(rest.poc.ProofOfConcept, "/get")
 
     return None
 
