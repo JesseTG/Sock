@@ -89,4 +89,4 @@ def init_twitter(app, config_object):
         config_object.TWITTER_ACCESS_TOKEN_SECRET
     )
 
-    app.logger.info(twitter.VerifyCredentials(False))
+    app.logger.info(twitter.VerifyCredentials(include_entities=False, skip_status=True))
