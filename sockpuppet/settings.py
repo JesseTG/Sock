@@ -20,6 +20,8 @@ class Config(object):
     TWITTER_ACCESS_TOKEN = os.environ.get("TWITTER_ACCESS_TOKEN")
     TWITTER_ACCESS_TOKEN_SECRET = os.environ.get("TWITTER_ACCESS_TOKEN_SECRET")
     MASHAPE_KEY = os.environ.get("MASHAPE_KEY")
+    API_KEY_PATH = os.environ.get("SOCKPUPPET_API_KEY_PATH")
+    # TODO: Make this more robust
 
 
 class ProdConfig(Config):

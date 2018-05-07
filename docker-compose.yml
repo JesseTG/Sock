@@ -1,0 +1,24 @@
+version: "3.6"
+services:
+  sockpuppet:
+    image: sockpuppet
+    ports:
+      - "80:80"
+      - "443:443"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    networks:
+      - net
+    secrets:
+      - sockpuppet-api-keys
+    environment:
+      SOCKPUPPET_API_KEY_PATH: /run/secrets/sockpuppet-api-keys
+
+networks:
+  net:
+
+secrets:
+  sockpuppet-api-keys:
+    external: true

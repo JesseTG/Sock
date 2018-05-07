@@ -1,15 +1,15 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.6-alpine3.7
+FROM tiangolo/uwsgi-nginx-flask:python3.6
 
-WORKDIR /dont-bother
-COPY . /dont-bother
-
-RUN apk update && apk add --no-cache nodejs
-RUN pip3 install --no-cache-dir --requirement requirements/dev.txt
-RUN npm install
-
-EXPOSE 80 443 22
-
-ENV FLASK_APP /dont-bother/autoapp.py
+ENV WORKDIR /app 
+ENV FLASK_APP ${WORKDIR}/main.py
 ENV FLASK_DEBUG 0
 
-CMD ["flask", "run"]
+#RUN addgroup -S ${APP_USER} && adduser -S -G ${APP_USER} ${APP_USER}
+#RUN apk update && apk add --no-cache gcc g++ libffi-dev
+RUN apt-get update && apt-get install gcc g++ libffi-dev
+
+COPY . ${WORKDIR}
+
+RUN pip3 install --no-cache-dir --requirement requirements/prod.txt
+
+EXPOSE 80 443

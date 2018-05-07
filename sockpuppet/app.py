@@ -15,12 +15,13 @@ def create_app(config_object=ProdConfig):
     """
     app = Flask(__name__.split('.')[0])
     app.config.from_object(config_object)
+    app.config.from_json(app.config['API_KEY_PATH'])
     register_extensions(app)
     register_blueprints(app)
     register_errorhandlers(app)
     register_shellcontext(app)
     register_commands(app)
-    register_botometer(app, config_object)
+    register_botometer(app)
     return app
 
 
@@ -77,12 +78,12 @@ def register_commands(app):
     app.cli.add_command(commands.urls)
 
 
-def register_botometer(app, config_object):
+def register_botometer(app):
     app.botometer = Botometer(
         wait_on_ratelimit=True,
-        mashape_key=config_object.MASHAPE_KEY,
-        consumer_key=config_object.TWITTER_CONSUMER_KEY,
-        consumer_secret=config_object.TWITTER_CONSUMER_SECRET,
-        access_token=config_object.TWITTER_ACCESS_TOKEN,
-        access_token_secret=config_object.TWITTER_ACCESS_TOKEN_SECRET
+        mashape_key=app.config['MASHAPE_KEY'],
+        consumer_key=app.config['TWITTER_CONSUMER_KEY'],
+        consumer_secret=app.config['TWITTER_CONSUMER_SECRET'],
+        access_token=app.config['TWITTER_ACCESS_TOKEN'],
+        access_token_secret=app.config['TWITTER_ACCESS_TOKEN_SECRET']
     )
