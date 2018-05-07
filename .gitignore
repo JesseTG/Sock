@@ -106,3 +106,4 @@ node_modules/
 manifest.json
 webpack/manifest.json
 package-lock.json
+.git
