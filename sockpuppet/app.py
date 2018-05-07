@@ -3,7 +3,7 @@
 from flask import Flask, render_template
 
 from sockpuppet import commands, public, rest
-from sockpuppet.extensions import api, cache, csrf_protect, db, debug_toolbar, migrate, webpack
+from sockpuppet.extensions import api, cache, db, debug_toolbar, migrate, webpack
 from sockpuppet.settings import ProdConfig
 from botometer import Botometer
 
@@ -29,7 +29,6 @@ def register_extensions(app):
     api.init_app(rest.poc.blueprint)
     cache.init_app(app)
     db.init_app(app)
-    csrf_protect.init_app(app)
     debug_toolbar.init_app(app)
     migrate.init_app(app, db)
     webpack.init_app(app)
