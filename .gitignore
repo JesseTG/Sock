@@ -107,3 +107,4 @@ manifest.json
 webpack/manifest.json
 package-lock.json
 .git
+.vscode
