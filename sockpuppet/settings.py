@@ -14,9 +14,13 @@ class Config(object):
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WEBPACK_MANIFEST_PATH = 'webpack/manifest.json'
+    CACHE_DEFAULT_TIMEOUT = 600  # seconds
+    TWITTER_CONSUMER_KEY = os.environ.get("TWITTER_CONSUMER_KEY")
+    TWITTER_CONSUMER_SECRET = os.environ.get("TWITTER_CONSUMER_SECRET")
+    TWITTER_ACCESS_TOKEN = os.environ.get("TWITTER_ACCESS_TOKEN")
+    TWITTER_ACCESS_TOKEN_SECRET = os.environ.get("TWITTER_ACCESS_TOKEN_SECRET")
     MASHAPE_KEY = os.environ.get("MASHAPE_KEY")
     API_KEY_PATH = os.environ.get("SOCKPUPPET_API_KEY_PATH")
-    CACHE_DEFAULT_TIMEOUT = 600  # seconds
     # TODO: Make this more robust
 
 
