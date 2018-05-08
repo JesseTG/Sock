@@ -16,6 +16,7 @@ def create_app(config_object=ProdConfig):
     app = Flask(__name__.split('.')[0])
     app.config.from_object(config_object)
     app.config.from_json(app.config['API_KEY_PATH'])
+    # TODO: Handle absence robustly
     register_extensions(app)
     register_blueprints(app)
     register_errorhandlers(app)
