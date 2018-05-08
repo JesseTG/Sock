@@ -11,7 +11,7 @@ class Config(object):
     PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, os.pardir))
     DEBUG_TB_ENABLED = False  # Disable Debug toolbar
     DEBUG_TB_INTERCEPT_REDIRECTS = False
-    CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
+    CACHE_TYPE = 'redis'  # Can be "memcached", "redis", etc.
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WEBPACK_MANIFEST_PATH = 'webpack/manifest.json'
     CACHE_DEFAULT_TIMEOUT = 600  # seconds
@@ -21,6 +21,10 @@ class Config(object):
     TWITTER_ACCESS_TOKEN_SECRET = os.environ.get("TWITTER_ACCESS_TOKEN_SECRET")
     MASHAPE_KEY = os.environ.get("MASHAPE_KEY")
     API_KEY_PATH = os.environ.get("SOCKPUPPET_API_KEY_PATH")
+    CACHE_REDIS_HOST = os.environ.get("SOCKPUPPET_REDIS_HOST", "redis")
+    CACHE_REDIS_PORT = os.environ.get("SOCKPUPPET_REDIS_PORT", 6379)
+    CACHE_REDIS_PASSWORD = os.environ.get("SOCKPUPPET_REDIS_PASSWORD")
+    CACHE_REDIS_DB = os.environ.get("SOCKPUPPET_REDIS_DB", 0)
     # TODO: Make this more robust
 
 

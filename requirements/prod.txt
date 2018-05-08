@@ -23,6 +23,7 @@ flask-webpack==0.1.0
 
 # Caching
 Flask-Caching>=1.0.0
+Redis
 
 # Debug toolbar
 Flask-DebugToolbar==0.10.1

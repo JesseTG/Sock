@@ -1,6 +1,8 @@
 version: "3.6"
 services:
   sockpuppet:
+    depends_on: 
+      - redis
     image: sockpuppet
     ports:
       - "80:80"
@@ -15,7 +17,17 @@ services:
       - sockpuppet-api-keys
     environment:
       SOCKPUPPET_API_KEY_PATH: /run/secrets/sockpuppet-api-keys
-
+  redis:
+    image: redis:4.0.9-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - "/home/docker/data:/data"
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - net
 networks:
   net:
 
