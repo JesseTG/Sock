@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#PBS -k eo
+#PBS -l nodes=1:ppn=28,walltime=168:00:00
+#PBS -q extended
+
+# each document is a user and their twitter history
+
+# for each 7zip archive:
+#  for each tweet:
+#    pipe it to a file based on the user id
+#
+# for each user:
+#   sort tweets by tweet id (as they are ascending, so effectively sorting by time)
+#   preprocess and tokenize each tweet like the stanford glove model
+#   concatenate to a file
+#
+# concatenate each tokenized file into one 7z-compressed glove-friendly corpus, with each user separated by line
