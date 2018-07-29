@@ -8,6 +8,7 @@ ENV FLASK_DEBUG 0
 RUN apk update && apk add --no-cache gcc g++ libffi-dev
 #RUN apt-get update && apt-get install gcc g++ libffi-dev
 
+# TODO: Must obtain the data set and pre-process it here
 COPY . ${WORKDIR}
 
 RUN pip3 install --no-cache-dir --requirement requirements/prod.txt
