@@ -5,6 +5,8 @@ import pytest
 from webtest import TestApp
 
 import torch
+import ignite
+from ignite.engine import Events, Engine
 
 from sockpuppet.app import create_app
 from sockpuppet.database import db as _db
@@ -138,3 +140,28 @@ def cresci_social_spambots_1_tweets_tensors_cuda(cresci_social_spambots_1_tweets
         tokenizer=tokenize,
         device="cuda"
     )
+
+
+@pytest.fixture(scope="function")
+def trainer(glove_embedding: WordEmbeddings):
+    def _trainer(device: str="cpu"):
+        model = ContextualLSTM(glove_embedding)
+        model.train(True)
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            lr=0.01
+        )
+        criterion = torch.nn.CrossEntropyLoss()
+        trainer = ignite.engine.create_supervised_trainer(model, optimizer, criterion, device)
+        trainer.state = ignite.engine.State()
+
+        @trainer.on(Events.STARTED)
+        def set_model_in_state(trainer):
+            trainer.state.model = model
+            trainer.state.criterion = criterion
+
+        set_model_in_state(trainer)
+
+        return trainer
+
+    return _trainer
