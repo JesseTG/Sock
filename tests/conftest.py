@@ -10,6 +10,7 @@ from sockpuppet.app import create_app
 from sockpuppet.database import db as _db
 from sockpuppet.settings import TestConfig
 from sockpuppet.model.embedding import WordEmbeddings
+from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.dataset.cresci import CresciTweetDataset, CresciUserDataset, CresciTensorTweetDataset
 from sockpuppet.model.dataset.twitter_tokenize import tokenize
 
