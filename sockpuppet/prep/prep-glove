@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# download glove data
+# strip garbage at the end
+# add zero vector
+# add pad vector
+# compress it
