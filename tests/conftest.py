@@ -4,11 +4,14 @@
 import pytest
 from webtest import TestApp
 
+import torch
+
 from sockpuppet.app import create_app
 from sockpuppet.database import db as _db
 from sockpuppet.settings import TestConfig
+from sockpuppet.model.embedding import WordEmbeddings
 
-from .factories import UserFactory
+GLOVE_PATH = f"{TestConfig.TRAINING_DATA_PATH}/glove/glove.twitter.27B.25d.txt"
 
 
 def pytest_collection_modifyitems(config, items):
@@ -59,3 +62,10 @@ def user(db):
     user = UserFactory(password='myprecious')
     db.session.commit()
     return user
+
+
+@pytest.fixture(scope="session")
+def glove_embedding():
+    """Load the GloVe embeddings."""
+    return WordEmbeddings(GLOVE_PATH, 25)
+
