@@ -11,6 +11,16 @@ from sockpuppet.settings import TestConfig
 from .factories import UserFactory
 
 
+def pytest_collection_modifyitems(config, items):
+    if config.getoption("--profile"):
+        # TODO: Detect the profiler plugin
+        return
+    skip_slow = pytest.mark.skip(reason="Only run if profiling")
+    for item in items:
+        if "profile" in item.keywords:
+            item.add_marker(skip_slow)
+
+
 @pytest.fixture
 def app():
     """An application for the tests."""
