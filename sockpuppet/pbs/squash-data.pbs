@@ -12,16 +12,26 @@ mkdir -p "$WORKING_DIR"
 cd "$WORKING_DIR"
 
 function squash-7z() {
+    echo "Converting $1 to squashfs archive"
+
     ARCHIVE_BASENAME="$(basename -s$2 "$1")"
     mkdir -p "$ARCHIVE_BASENAME"
 
     while read -r json; do
+        # For each line in the compressed 7z file...
         ID_STR="$(echo "$json" | jq -r .id_str)"
         echo "$json" > "$ARCHIVE_BASENAME/$ID_STR.json"
     done < <(7z e -so "$1")
 
-    mksquashfs "$ARCHIVE_BASENAME" "$ARCHIVE_BASENAME.sqfs" -no-xattrs -comp xz
+    echo "Split $1 into files, making squashfs archive now"
+
+    mksquashfs "$ARCHIVE_BASENAME" "$ARCHIVE_BASENAME.sqfs" -info -no-xattrs -comp xz
+
+    echo "Made squashfs image $ARCHIVE_BASENAME.sqfs"
+
     rm -rf "$ARCHIVE_BASENAME"
+
+    echo "Removed temp folder $ARCHIVE_BASENAME"
 }
 
 
