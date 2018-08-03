@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Defines fixtures available to all tests."""
 
+from typing import Callable
+
 import pytest
 from webtest import TestApp
 
@@ -165,3 +167,13 @@ def trainer(glove_embedding: WordEmbeddings):
         return trainer
 
     return _trainer
+
+
+@pytest.fixture(scope="function")
+def trainer_cpu(trainer: Callable[[str], Engine]):
+    return trainer("cpu")
+
+
+@pytest.fixture(scope="function")
+def trainer_cuda(trainer: Callable[[str], Engine]):
+    return trainer("cuda")

@@ -1,4 +1,4 @@
-from typing import Callable, Sequence
+from typing import Callable, Sequence, Tuple
 import time
 
 import pytest
@@ -7,6 +7,7 @@ import ignite
 
 from torch import Tensor, LongTensor
 from torch.utils.data import DataLoader, Dataset, TensorDataset
+from torch.nn.utils.rnn import pad_sequence
 from ignite.engine import Events, Engine
 import ignite.metrics
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
@@ -17,6 +18,10 @@ from tests.marks import needs_cuda, needs_cudnn
 VALIDATE_EVERY = 100
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 10
+BATCH_SIZE = 8
+
+
+torch.manual_seed(0)
 
 
 def is_monotonically_decreasing(numbers: Sequence[float]) -> bool:
@@ -26,6 +31,14 @@ def is_monotonically_decreasing(numbers: Sequence[float]) -> bool:
             return False
 
     return True
+
+
+def sentence_collate(sentences: Sequence[Tuple[LongTensor, LongTensor]]) -> Tuple[LongTensor, LongTensor]:
+    sentences = sorted(sentences, key=lambda x: len(x[0]), reverse=True)
+
+    padded = pad_sequence([s[0] for s in sentences], False, 0)
+    catted = torch.tensor([s[1] for s in sentences])
+    return (padded, catted)
 
 
 @pytest.fixture(scope="module")
@@ -41,6 +54,13 @@ def training_dataset(glove_embedding: WordEmbeddings):
 
 
 @pytest.fixture(scope="module")
+def training_dataset_cuda(training_dataset: LabelDataset):
+    data = training_dataset.data.cuda()
+    labels = training_dataset.labels.cuda()
+    return LabelDataset(data, labels)
+
+
+@pytest.fixture(scope="module")
 def validation_dataset(glove_embedding: WordEmbeddings):
     num_words = len(glove_embedding) - 1
 
@@ -53,37 +73,50 @@ def validation_dataset(glove_embedding: WordEmbeddings):
 
 
 @pytest.fixture(scope="module")
-def training_data(training_dataset: LabelDataset):
-    return DataLoader(training_dataset, batch_size=8)
+def validation_dataset_cuda(validation_dataset: LabelDataset):
+    data = validation_dataset.data.cuda()
+    labels = validation_dataset.labels.cuda()
+    return LabelDataset(data, labels)
 
 
 @pytest.fixture(scope="module")
-def training_data_cuda(training_dataset: LabelDataset):
-    data = training_dataset.data.cuda()
-    labels = training_dataset.labels.cuda()
-    return DataLoader(LabelDataset(data, labels), batch_size=8)
+def training_data(training_dataset: LabelDataset):
+    return DataLoader(training_dataset, batch_size=1)
+
+
+@pytest.fixture(scope="module")
+def training_data_batched(training_dataset: LabelDataset):
+    return DataLoader(training_dataset, batch_size=BATCH_SIZE)
+
+
+@pytest.fixture(scope="module")
+def training_data_cuda(training_dataset_cuda: LabelDataset):
+    return DataLoader(training_dataset_cuda, batch_size=1)
+
+
+@pytest.fixture(scope="module")
+def training_data_cuda_batched(training_dataset_cuda: LabelDataset):
+    return DataLoader(training_dataset_cuda, batch_size=BATCH_SIZE)
 
 
 @pytest.fixture(scope="module")
 def validation_data(validation_dataset: Dataset):
-    return DataLoader(validation_dataset, batch_size=8)
+    return DataLoader(validation_dataset, batch_size=1)
 
 
 @pytest.fixture(scope="module")
-def validation_data_cuda(validation_dataset: LabelDataset):
-    data = validation_dataset.data.cuda()
-    labels = validation_dataset.labels.cuda()
-    return DataLoader(LabelDataset(data, labels), batch_size=8)
+def validation_data_batched(validation_dataset: Dataset):
+    return DataLoader(validation_dataset, batch_size=BATCH_SIZE)
 
 
-@pytest.fixture(scope="function")
-def trainer_cpu(trainer: Callable[[str], Engine]):
-    return trainer("cpu")
+@pytest.fixture(scope="module")
+def validation_data_cuda(validation_dataset_cuda: LabelDataset):
+    return DataLoader(validation_dataset_cuda, batch_size=1)
 
 
-@pytest.fixture(scope="function")
-def trainer_cuda(trainer: Callable[[str], Engine]):
-    return trainer("cuda")
+@pytest.fixture(scope="module")
+def validation_data_cuda_batched(validation_dataset_cuda: Dataset):
+    return DataLoader(validation_dataset_cuda, batch_size=BATCH_SIZE)
 
 
 def test_training_runs_cpu(trainer_cpu: Engine, training_data: DataLoader):
@@ -92,9 +125,22 @@ def test_training_runs_cpu(trainer_cpu: Engine, training_data: DataLoader):
     assert result is not None
 
 
+def test_training_runs_cpu_batched(trainer_cpu: Engine, training_data_batched: DataLoader):
+    result = trainer_cpu.run(training_data_batched, max_epochs=MAX_EPOCHS)
+
+    assert result is not None
+
+
 @needs_cuda
 def test_training_runs_cuda(trainer_cuda: Engine, training_data_cuda: DataLoader):
     result = trainer_cuda.run(training_data_cuda, max_epochs=MAX_EPOCHS)
+
+    assert result is not None
+
+
+@needs_cuda
+def test_training_runs_cuda_batched(trainer_cuda: Engine, training_data_cuda_batched: DataLoader):
+    result = trainer_cuda.run(training_data_cuda_batched, max_epochs=MAX_EPOCHS)
 
     assert result is not None
 

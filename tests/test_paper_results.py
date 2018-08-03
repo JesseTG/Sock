@@ -9,6 +9,7 @@ import ignite
 from torch import Tensor, LongTensor
 from torch.utils.data import DataLoader, Dataset, TensorDataset, ConcatDataset, RandomSampler, random_split
 from ignite.engine import Events, Engine
+from ignite.handlers import EarlyStopping
 import ignite.metrics
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
@@ -27,6 +28,7 @@ BOT = 1
 TRAINING_SPLIT = 0.4
 VALIDATION_SPLIT = 0.1
 TESTING_SPLIT = 0.5
+TRAINER_PATIENCE = 10
 
 
 Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
@@ -144,7 +146,14 @@ def test_accuracy(trainer_cuda: Engine, training_data: DataLoader, validation_da
         trainer.state.recall.append(validator.state.metrics["recall"])
         trainer.state.precision.append(validator.state.metrics["precision"])
 
+    def score_function(trainer: Engine) -> float:
+        return -trainer.state.metrics["loss"]
+
+    handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer_cuda)
+    validator.add_event_handler(Events.EPOCH_COMPLETED, handler)
+
     trainer_cuda.run(training_data, max_epochs=MAX_EPOCHS)
+    # TODO: Batching is getting all fucked up, only works with size 1 but even then...
 
     assert trainer_cuda.state.accuracy[-1] >= 0.50
     assert trainer_cuda.state.accuracy[-1] >= 0.60
