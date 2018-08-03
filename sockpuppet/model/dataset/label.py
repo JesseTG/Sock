@@ -1,5 +1,6 @@
 from typing import Any, Sequence, Tuple, TypeVar
 
+import torch
 from torch.utils.data.dataset import Dataset
 
 T = TypeVar('T')
@@ -18,6 +19,9 @@ class LabelDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index: int) -> Tuple[T, U]:
+        if torch.is_tensor(index):
+            index = index.item()
+
         return (self.data[index], self.labels[index])
 
 
@@ -30,4 +34,7 @@ class SingleLabelDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index: int) -> Tuple[T, Any]:
+        if torch.is_tensor(index):
+            index = index.item()
+
         return (self.data[index], self.label)
