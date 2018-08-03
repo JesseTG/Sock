@@ -50,9 +50,12 @@ class ContextualLSTM(nn.Module):
         # hn: Last element's hidden state
         # cn: Last element's cell state
 
+        hn = hn.view(len(sentences), self.lstm.hidden_size)
+        # Only using one LSTM layer
+
         a = functional.relu(self.dense1(hn))  # Size([???]) -> Size([???])
         b = functional.relu(self.dense2(a))  # Size([???]) -> Size([???])
         c = torch.sigmoid(self.output(b))  # Size([???]) -> Size([num_tweets, 2])
-        return c.squeeze()
+        return c
         # TODO: May have to add another dimension for each of two classes (yes or no)
         # TODO: What optimizer did the paper use?  What loss function?
