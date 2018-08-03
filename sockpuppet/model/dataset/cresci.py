@@ -60,6 +60,9 @@ class CresciTweetDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index: int):
+        if torch.is_tensor(index):
+            index = index.item()
+
         return self.data.loc[index]
 
 
@@ -83,6 +86,9 @@ class CresciTensorTweetDataset(Dataset):
         return len(self.tensors)
 
     def __getitem__(self, index: int) -> Tensor:
+        if torch.is_tensor(index):
+            index = index.item()
+
         if self.tensors[index] is None:
             text = self.data_source[index].text
             tokens = self.tokenizer(text)
