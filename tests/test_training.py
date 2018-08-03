@@ -11,7 +11,7 @@ from ignite.engine import Events, Engine
 import ignite.metrics
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
-from sockpuppet.model.dataset.label import LabelDataset
+from sockpuppet.model.dataset import LabelDataset
 from tests.marks import needs_cuda, needs_cudnn
 
 VALIDATE_EVERY = 100
