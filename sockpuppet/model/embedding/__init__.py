@@ -11,6 +11,7 @@ TORCH_INT_DTYPES = (torch.uint8, torch.int8, torch.short, torch.int, torch.long)
 
 
 class WordEmbeddings:
+    # TODO: Add support for cuda devices
     def __init__(self, path: str, dim: int):
         with open(path, "r") as file:
             data = pandas.read_table(
@@ -34,6 +35,9 @@ class WordEmbeddings:
         # note: must append a <unk> zero vector to embedding file
         # do so with python3 -c 'print("<unk>", *([0.0]*25))' >> the_data_file.txt
 
+    def _get_word(self, index):
+        return self.indices.get(index, 1)
+
     def __len__(self) -> int:
         return len(self.words)
 
@@ -43,7 +47,7 @@ class WordEmbeddings:
             return self.vectors[index]
         elif isinstance(index, str):
             # If we're trying to get a vector from a word...
-            return self.vectors[self.indices.get(index, len(self) - 1)]
+            return self.vectors[self._get_word(index)]
         elif torch.is_tensor(index) and index.dim() == 0:
             # If this is a one-element tensor...
             return self.vectors[index.item()]
@@ -51,7 +55,7 @@ class WordEmbeddings:
             raise TypeError(f"Cannot index with a {type(index).__name__}")
 
     def encode(self, tokens: Sequence[str]) -> Tensor:
-        return torch.LongTensor([self.indices.get(t, len(self) - 1) for t in tokens])
+        return torch.LongTensor([self._get_word(t) for t in tokens])
         # Encodings should always be on the CPU, as the dictionary is
 
     def to_layer(self) -> Embedding:

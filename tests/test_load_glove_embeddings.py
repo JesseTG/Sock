@@ -18,25 +18,23 @@ def embedding_layer(glove_embedding: WordEmbeddings):
 
 
 def test_correct_embedding_words_loaded(glove_embedding: WordEmbeddings):
-    assert glove_embedding.words[0] == "<user>"
+    assert glove_embedding.words[2] == "<user>"
 
 
 def test_all_embedding_vectors_loaded(glove_embedding: WordEmbeddings):
     assert len(glove_embedding) == 1193516
 
 
-def test_last_word_is_pad(glove_embedding: WordEmbeddings):
-    assert glove_embedding.words[-1] == "<pad>"
-    assert glove_embedding.words[1193515] == "<pad>"
+def test_pad_is_index_0(glove_embedding: WordEmbeddings):
+    assert glove_embedding.words[0] == "<pad>"
 
 
-def test_second_to_last_word_is_unk(glove_embedding: WordEmbeddings):
-    assert glove_embedding.words[-2] == "<unk>"
-    assert glove_embedding.words[1193514] == "<unk>"
+def test_unk_is_index_1(glove_embedding: WordEmbeddings):
+    assert glove_embedding.words[1] == "<unk>"
 
 
-def test_last_word_vector_is_all_zeros(glove_embedding: WordEmbeddings):
-    assert glove_embedding[-1].numpy() == pytest.approx(ZERO_VECTOR.numpy())
+def test_first_word_vector_is_all_zeros(glove_embedding: WordEmbeddings):
+    assert glove_embedding[0].numpy() == pytest.approx(ZERO_VECTOR.numpy())
 
 
 def test_correct_embedding_vector_length(glove_embedding: WordEmbeddings):
@@ -44,7 +42,7 @@ def test_correct_embedding_vector_length(glove_embedding: WordEmbeddings):
 
 
 def test_correct_embedding_values_loaded(glove_embedding: WordEmbeddings):
-    assert glove_embedding.vectors[0].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
+    assert glove_embedding.vectors[2].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
 
 
 def test_embedding_length_consistent(glove_embedding: WordEmbeddings):
@@ -52,7 +50,7 @@ def test_embedding_length_consistent(glove_embedding: WordEmbeddings):
 
 
 def test_get_vector_by_int_index(glove_embedding: WordEmbeddings):
-    assert glove_embedding[0].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
+    assert glove_embedding[2].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
 
 
 def test_get_vector_by_str_index(glove_embedding: WordEmbeddings):
@@ -70,7 +68,7 @@ def test_encode_has_correct_value(glove_embedding: WordEmbeddings):
     tokens = "<user> it is not in my video".split()
     encoding = glove_embedding.encode(tokens)
 
-    assert torch.equal(encoding, torch.LongTensor([0, 33, 32, 78, 35, 29, 286]))
+    assert torch.equal(encoding, torch.LongTensor([2, 35, 34, 80, 37, 31, 288]))
 
 
 def test_embed_from_encoding_returns_tensor(glove_embedding: WordEmbeddings):
@@ -118,17 +116,17 @@ def test_embed_from_tokens_has_correct_value(glove_embedding: WordEmbeddings):
     assert embedding[0].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
 
 
-def test_unknown_word_embeds_to_zero(glove_embedding: WordEmbeddings):
+def test_unknown_word_embeds_to_zero_vector(glove_embedding: WordEmbeddings):
     embedding = glove_embedding["<france>"]
 
     assert embedding.numpy() == pytest.approx(ZERO_VECTOR.numpy())
 
 
-def test_unknown_word_encodes_to_max_minus_1(glove_embedding: WordEmbeddings):
+def test_unknown_word_encodes_to_index_1(glove_embedding: WordEmbeddings):
     tokens = "<france> <spain> <china> <user>".split()
     encoding = glove_embedding.encode(tokens)
 
-    assert torch.equal(encoding, torch.LongTensor([1193514, 1193514, 1193514, 0]))
+    assert torch.equal(encoding, torch.LongTensor([1, 1, 1, 2]))
 
 
 def test_embed_empty_string_to_zero(glove_embedding: WordEmbeddings):

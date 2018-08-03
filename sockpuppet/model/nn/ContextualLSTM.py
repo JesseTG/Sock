@@ -16,7 +16,7 @@ class ContextualLSTM(nn.Module):
         self.word_embeddings = word_embeddings
 
         self.embeddings = self.word_embeddings.to_layer()  # type: Embedding
-        self.embeddings.padding_idx = len(self.word_embeddings) - 1
+        self.embeddings.padding_idx = 0
 
         self.lstm = nn.LSTM(word_embeddings.dim, hidden_layers, batch_first=False)
         self.dense1 = nn.Linear(hidden_layers, 128)
