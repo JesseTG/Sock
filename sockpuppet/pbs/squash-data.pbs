@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+#PBS -k eo
+#PBS -l nodes=1:ppn=28,walltime=48:00:00
+#PBS -q long
+#PBS -t 0-5
+
+module load shared
+module load anaconda/.anaconda
+
+WORKING_DIR="$HOME/scratch/twitter"
+mkdir -p "$WORKING_DIR"
+cd "$WORKING_DIR"
+
+function squash-7z() {
+    ARCHIVE_BASENAME="$(basename -s$2 "$1")"
+    mkdir -p "$ARCHIVE_BASENAME"
+
+    while read -r json; do
+        ID_STR="$(echo "$json" | jq -r .id_str)"
+        echo "$json" > "$ARCHIVE_BASENAME/$ID_STR.json"
+    done < <(7z e -so "$1")
+
+    mksquashfs "$ARCHIVE_BASENAME" "$ARCHIVE_BASENAME.sqfs" -no-xattrs -comp xz
+    rm -rf "$ARCHIVE_BASENAME"
+}
+
+
+case "$PBS_ARRAYID" in
+  0) INPUT="$WORKING_DIR/tweets/tweets.00.jsonl.7z" ;;
+  1) INPUT="$WORKING_DIR/tweets/tweets.01.jsonl.7z" ;;
+  2) INPUT="$WORKING_DIR/tweets/tweets.02.jsonl.7z" ;;
+  3) INPUT="$WORKING_DIR/tweets/tweets.03.jsonl.7z" ;;
+  4) INPUT="$WORKING_DIR/tweets/tweets.04.jsonl.7z" ;;
+  5) INPUT="$WORKING_DIR/tweets/tweets.05.jsonl.7z" ;
+esac
+
+
+squash-7z "$INPUT" ".jsonl.7z"
