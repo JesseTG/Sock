@@ -86,7 +86,7 @@ class CresciTensorTweetDataset(Dataset):
         if self.tensors[index] is None:
             text = self.data_source[index].text
             tokens = self.tokenizer(text)
-            tensor = self.embeddings.embed(tokens)
+            tensor = self.embeddings.encode(tokens)
             self.tensors[index] = tensor.to(self.device)
 
         return self.tensors[index]

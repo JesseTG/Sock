@@ -41,3 +41,7 @@ def test_cresci_tensor_tweet_dataset_loads_tensors(cresci_genuine_accounts_tweet
 
 def test_cresci_tensor_tweet_embeds_all_words(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
     assert len(cresci_genuine_accounts_tweets_tensors[0]) == 25
+
+
+def test_cresci_tensor_tweet_dataset_returns_word_indices(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
+    assert cresci_genuine_accounts_tweets_tensors[0].dtype == torch.long
