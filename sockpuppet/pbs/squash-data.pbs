@@ -25,7 +25,7 @@ function squash-7z() {
 
     echo "Split $1 into files, making squashfs archive now"
 
-    mksquashfs "$ARCHIVE_BASENAME" "$ARCHIVE_BASENAME.sqfs" -info -no-xattrs -comp xz -b 1M
+    mksquashfs "$ARCHIVE_BASENAME" "$ARCHIVE_BASENAME.sqfs" -info -no-xattrs -comp xz -b 1M -Xdict-size 100%
 
     echo "Made squashfs image $ARCHIVE_BASENAME.sqfs"
 
