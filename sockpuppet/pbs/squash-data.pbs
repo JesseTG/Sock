@@ -19,8 +19,15 @@ function squash-7z() {
 
     while read -r json; do
         # For each line in the compressed 7z file...
-        ID_STR="$(echo "$json" | jq -r .id_str)"
-        echo "$json" > "$ARCHIVE_BASENAME/$ID_STR.json"
+        ID_STR="$(echo "$json" | jq -r .id_str | printf "%.20d" $(cat /dev/stdin))"
+        # Zero-padded ID, up to 20 digits (because 2^64 has 20 digits)
+        ID_GROUPS="$(echo $ID_STR | sed -r 's|([0-9]{4})|\1/|g')"
+        # Format ID_STR into 5 groups of 4, including leading 0s
+        
+        ID_DIR="$(dirname $ID_GROUPS)"
+        ID_NAME="$(basename $ID_GROUPS)"
+        mkdir -p "$ARCHIVE_BASENAME/$ID_DIR"
+        echo "$json" > "$ARCHIVE_BASENAME/$ID_DIR/$ID_NAME.json"
     done < <(7z e -so "$1")
 
     echo "Split $1 into files, making squashfs archive now"
