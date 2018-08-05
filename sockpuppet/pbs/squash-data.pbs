@@ -57,7 +57,7 @@ case "$PBS_ARRAYID" in
   2) INPUT="$WORKING_DIR/tweets/tweets.02.jsonl.7z" ;;
   3) INPUT="$WORKING_DIR/tweets/tweets.03.jsonl.7z" ;;
   4) INPUT="$WORKING_DIR/tweets/tweets.04.jsonl.7z" ;;
-  5) INPUT="$WORKING_DIR/tweets/tweets.05.jsonl.7z" ;
+  5) INPUT="$WORKING_DIR/tweets/tweets.05.jsonl.7z" ;;
 esac
 
 
