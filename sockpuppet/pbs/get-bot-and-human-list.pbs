@@ -38,7 +38,7 @@ function extract-538() {
 }
 
 extract-caverlee-2011 "$CAVERLEE_2011" &
-extract-creci-2017 "$CRESCI_2017/genuine_accounts.csv" &
+extract-cresci-2017 "$CRESCI_2017/genuine_accounts.csv" &
 extract-nbc "$NBC" &
 extract-538 "$FIVE38" &
 
