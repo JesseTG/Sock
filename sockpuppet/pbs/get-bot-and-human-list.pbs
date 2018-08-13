@@ -20,9 +20,9 @@ cd "$WORKING_DIR"
 
 function extract-caverlee-2011() {
     cat "$1/legitimate_users.txt" | cut -f1 > "$1/humans-caverlee-2011.ids"
-    twarc "$1/humans-caverlee-2011.ids" | jq -r .screen_name > "$1/humans-caverlee-2011.unsorted"
+    twarc users "$1/humans-caverlee-2011.ids" | jq -r .screen_name > "$1/humans-caverlee-2011.unsorted"
     sort -u "$1/humans-caverlee-2011.unsorted" > "$1/humans-caverlee-2011.txt"
-    rm "$1/humans-caverlee-2011.unsorted" rm "$1/twarc.log"
+    rm "$1/humans-caverlee-2011.unsorted" "$1/twarc.log"
 }
 
 function extract-cresci-2017() {
