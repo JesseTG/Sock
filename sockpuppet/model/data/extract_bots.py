@@ -21,7 +21,8 @@ def main():
                     screen_name = user["screen_name"]
 
                     if screen_name.casefold() in userset:
-                    print(line, end="")
+                        print(line, end="")
+
 
 if __name__ == "__main__":
     main()
