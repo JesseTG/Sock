@@ -46,6 +46,7 @@ class WordEmbeddings:
         return self.vectors.device
 
     def __getitem__(self, index) -> Tensor:
+        # Indexing uses the same underlying storage
         if isinstance(index, int):
             # If we're indexing by integer...
             return self.vectors[index]
