@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Union, Tuple
 from torch import Tensor, LongTensor
 from torch.nn.utils.rnn import pad_sequence
 
@@ -8,3 +8,13 @@ def sentence_collate(sentences: Sequence[LongTensor]) -> LongTensor:
     padded = pad_sequence(sentences, False, 0)
 
     return padded
+
+
+def sentence_collate_batch(sentences: Sequence[Tuple[LongTensor, int]]) -> Tuple[LongTensor, Sequence[int]]:
+    sentences = sorted(sentences, key=lambda s: len(s[0]), reverse=True)
+    encodings = [s[0] for s in sentences]
+    labels = LongTensor([s[1] for s in sentences], device=sentences[0][0].device)
+
+    padded = pad_sequence(encodings, False, 0)
+
+    return padded, labels
