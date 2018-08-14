@@ -12,7 +12,7 @@ TORCH_INT_DTYPES = (torch.uint8, torch.int8, torch.short, torch.int, torch.long)
 
 class WordEmbeddings:
     # TODO: Add support for cuda devices
-    def __init__(self, path: str, dim: int):
+    def __init__(self, path: str, dim: int, device="cpu"):
         with open(path, "r") as file:
             data = pandas.read_table(
                 file,
@@ -27,7 +27,7 @@ class WordEmbeddings:
 
         self.dim = dim
         self.words = data[0].tolist()  # type: list
-        self.vectors = torch.from_numpy(data.iloc[:, 1:dim + 1].values).type(torch.float)  # type: Tensor
+        self.vectors = torch.from_numpy(data.iloc[:, 1:dim + 1].values).type(torch.float).to(device)  # type: Tensor
         self.vectors.requires_grad_(False)
         # [all rows, second column:last column]
 
@@ -40,6 +40,10 @@ class WordEmbeddings:
 
     def __len__(self) -> int:
         return len(self.words)
+
+    @property
+    def device(self) -> torch.device:
+        return self.vectors.device
 
     def __getitem__(self, index) -> Tensor:
         if isinstance(index, int):
@@ -55,8 +59,7 @@ class WordEmbeddings:
             raise TypeError(f"Cannot index with a {type(index).__name__}")
 
     def encode(self, tokens: Sequence[str]) -> Tensor:
-        return torch.LongTensor([self._get_word(t) for t in tokens])
-        # Encodings should always be on the CPU, as the dictionary is
+        return torch.tensor([self._get_word(t) for t in tokens], dtype=torch.long, device=self.device)
 
     def to_layer(self) -> Embedding:
         return Embedding.from_pretrained(self.vectors)
@@ -64,7 +67,7 @@ class WordEmbeddings:
     def embed(self, encoding) -> Tensor:
         if len(encoding) == 0:
             # If we're embedding an empty document...
-            return torch.zeros([1, self.dim], dtype=torch.float)
+            return torch.zeros([1, self.dim], dtype=torch.float, device=self.device)
             # ...return the zero vector
         elif torch.is_tensor(encoding) and encoding.dtype in TORCH_INT_DTYPES:
             # Else if this is a tensor of indices...
@@ -74,7 +77,7 @@ class WordEmbeddings:
             # Else if this is a standard Python sequence...
             if isinstance(encoding[0], int):
                 # ...of word indices...
-                return self.vectors.index_select(0, torch.LongTensor(encoding))
+                return self.vectors.index_select(0, torch.tensor(encoding, dtype=torch.long, device=self.device))
             elif isinstance(encoding[0], str):
                 # ...of words...
                 return self.vectors.index_select(0, self.encode(encoding))
