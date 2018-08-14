@@ -60,7 +60,12 @@ class WordEmbeddings:
             raise TypeError(f"Cannot index with a {type(index).__name__}")
 
     def encode(self, tokens: Sequence[str]) -> Tensor:
-        return torch.tensor([self._get_word(t) for t in tokens], dtype=torch.long, device=self.device)
+        if len(tokens) > 0:
+            # If this is a non-empty sentence...
+            return torch.tensor([self._get_word(t) for t in tokens], dtype=torch.long, device=self.device)
+        else:
+            return torch.tensor([1], dtype=torch.long, device=self.device)
+            # TODO: Dedicate a special token <empty> and an index for it
 
     def to_layer(self) -> Embedding:
         return Embedding.from_pretrained(self.vectors)
