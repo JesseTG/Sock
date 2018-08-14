@@ -116,13 +116,26 @@ def test_lstm_evaluates_batches_of_different_length_in_list_of_tensors_sorted(ls
     assert torch.is_tensor(result)
 
 
-def test_lstm_returns_2d_tensor(lstm: ContextualLSTM):
+def test_lstm_returns_1d_float_tensor_from_list_of_tensors(lstm: ContextualLSTM):
     encoding = [
         torch.tensor([0, 1, 5, 8, 3, 1], dtype=torch.long, device=lstm.device),
         torch.tensor([1, 4, 6, 1, 9, 7], dtype=torch.long, device=lstm.device),
         torch.tensor([9, 0, 6, 9, 9, 0], dtype=torch.long, device=lstm.device),
         torch.tensor([2, 3, 6, 1, 2, 4], dtype=torch.long, device=lstm.device),
     ]
+
+    result = lstm(encoding)
+    assert result.dtype.is_floating_point
+    assert result.shape == torch.Size([len(encoding)])
+
+
+def test_lstm_returns_1d_float_tensor_from_tensor(lstm: ContextualLSTM):
+    encoding = torch.tensor([
+        [0, 1, 5, 8, 3, 1],
+        [1, 4, 6, 1, 9, 7],
+        [9, 0, 6, 9, 9, 0],
+        [2, 3, 6, 1, 2, 4],
+    ], dtype=torch.long, device=lstm.device)
 
     result = lstm(encoding)
     assert result.dtype.is_floating_point
