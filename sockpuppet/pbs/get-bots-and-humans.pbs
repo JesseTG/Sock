@@ -6,6 +6,7 @@
 module load shared
 module load anaconda/.anaconda
 
+EXTRACT_BOT_SCRIPT="$HOME/code/Sock-Puppet/sockpuppet/model/data/extract_bots.py"
 WORKING_DIR="$HOME/scratch/twitter"
 LABELED_DIR="$WORKING_DIR/labeled"
 BOT_DIR="$LABELED_DIR/bot"
@@ -22,12 +23,13 @@ function extract() {
     OUTDIR="$2"
     BASENAME="$(basename -s.7z "$ARCHIVE")"
 
+
     echo "Looking for communication with known bots in $ARCHIVE, exporting to $OUTDIR"
 
     7z e -so "$ARCHIVE" | \
         tee \
-            >(grep --fixed-strings --ignore-case --file="$BOT_LIST" - > "$BOT_DIR/$BASENAME.bots.jsonl") \
-            >(grep --fixed-strings --ignore-case --file="$HUMAN_LIST" - > "$HUMAN_DIR/$BASENAME.humans.jsonl") \
+            >(python3 -OO "$EXTRACT_BOT_SCRIPT" $BOT_LIST" > "$BOT_DIR/$BASENAME.bots.jsonl") \
+            >(python3 -OO "$EXTRACT_BOT_SCRIPT" $HUMAN_LIST" > "$HUMAN_DIR/$BASENAME.humans.jsonl") \
         > /dev/null
 
     echo "Done with processing $ARCHIVE to $OUTDIR"
