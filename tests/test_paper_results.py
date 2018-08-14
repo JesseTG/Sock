@@ -19,7 +19,7 @@ from sockpuppet.model.dataset import sentence_collate, sentence_collate_batch
 from sockpuppet.utils import split_integers
 from tests.marks import needs_cuda, needs_cudnn
 
-VALIDATE_EVERY = 100
+VALIDATE_EVERY = 2
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 10
 BATCH_SIZE = 8
@@ -122,14 +122,28 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 @needs_cuda
 @needs_cudnn
 @pytest.mark.cuda_only
-def test_accuracy(trainer: Engine, training_data: DataLoader, validation_data: DataLoader, testing_data: DataLoader):
+def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation_data: DataLoader, testing_data: DataLoader):
+    def tf(y):
+        # TODO: Move to general utility function elsewhere
+        return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
+
+    mapping = torch.tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
+
+    def tf_2class(output):
+        y_pred, y = output
+
+        y_pred = mapping.index_select(0, y_pred.round().to(torch.long))
+
+        # TODO: Recall metric isn't meant to be used for a binary class, so expand 0 to [1, 0] and 1 to [0, 1]
+        return (y_pred, y.to(torch.long))
+
     validator = ignite.engine.create_supervised_evaluator(
         trainer.state.model,
         metrics={
-            "loss": ignite.metrics.Loss(trainer.state.criterion),
-            "accuracy": ignite.metrics.BinaryAccuracy(),
-            "recall": ignite.metrics.Recall(average=True),
-            "precision": ignite.metrics.Precision(average=True),
+            "loss": ignite.metrics.Loss(trainer.state.criterion, output_transform=tf),
+            "accuracy": ignite.metrics.BinaryAccuracy(output_transform=tf),
+            "recall": ignite.metrics.Recall(average=True, output_transform=tf_2class),
+            "precision": ignite.metrics.Precision(average=True, output_transform=tf_2class),
         }
     )
 
@@ -140,13 +154,14 @@ def test_accuracy(trainer: Engine, training_data: DataLoader, validation_data: D
         trainer.state.recall = []
         trainer.state.precision = []
 
-    @trainer.on(Events.EPOCH_COMPLETED)
+    @trainer.on(Events.ITERATION_COMPLETED)
     def validate(trainer: Engine):
-        validator.run(validation_data)
-        trainer.state.loss.append(validator.state.metrics["loss"])
-        trainer.state.accuracy.append(validator.state.metrics["accuracy"])
-        trainer.state.recall.append(validator.state.metrics["recall"])
-        trainer.state.precision.append(validator.state.metrics["precision"])
+        if trainer.state.epoch % VALIDATE_EVERY == 0:
+            validator.run(validation_data)
+            trainer.state.loss.append(validator.state.metrics["loss"])
+            trainer.state.accuracy.append(validator.state.metrics["accuracy"])
+            trainer.state.recall.append(validator.state.metrics["recall"])
+            trainer.state.precision.append(validator.state.metrics["precision"])
 
     def score_function(trainer: Engine) -> float:
         return -trainer.state.metrics["loss"]
@@ -155,7 +170,6 @@ def test_accuracy(trainer: Engine, training_data: DataLoader, validation_data: D
     validator.add_event_handler(Events.EPOCH_COMPLETED, handler)
 
     trainer.run(training_data, max_epochs=MAX_EPOCHS)
-    # TODO: Batching is getting all fucked up, only works with size 1 but even then...
 
     assert trainer.state.accuracy[-1] >= 0.50
     assert trainer.state.accuracy[-1] >= 0.60
