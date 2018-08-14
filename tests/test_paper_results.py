@@ -21,7 +21,7 @@ from tests.marks import needs_cuda, needs_cudnn
 
 VALIDATE_EVERY = 100
 CHECKPOINT_EVERY = 100
-MAX_EPOCHS = 50
+MAX_EPOCHS = 10
 BATCH_SIZE = 8
 
 NOT_BOT = 0
@@ -36,23 +36,23 @@ Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
 
 
 @pytest.fixture(scope="module")
-def cresci_genuine_accounts_split(cresci_genuine_accounts_tweets_tensors_cuda: CresciTensorTweetDataset):
-    length = len(cresci_genuine_accounts_tweets_tensors_cuda)
+def cresci_genuine_accounts_split(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
+    length = len(cresci_genuine_accounts_tweets_tensors)
     split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
 
-    splits = random_split(cresci_genuine_accounts_tweets_tensors_cuda, split_lengths)
+    splits = random_split(cresci_genuine_accounts_tweets_tensors, split_lengths)
 
-    return Splits(cresci_genuine_accounts_tweets_tensors_cuda, *splits)
+    return Splits(cresci_genuine_accounts_tweets_tensors, *splits)
 
 
 @pytest.fixture(scope="module")
-def cresci_social_spambots_1_split(cresci_social_spambots_1_tweets_tensors_cuda: CresciTensorTweetDataset):
-    length = len(cresci_social_spambots_1_tweets_tensors_cuda)
+def cresci_social_spambots_1_split(cresci_social_spambots_1_tweets_tensors: CresciTensorTweetDataset):
+    length = len(cresci_social_spambots_1_tweets_tensors)
     split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
 
-    splits = random_split(cresci_social_spambots_1_tweets_tensors_cuda, split_lengths)
+    splits = random_split(cresci_social_spambots_1_tweets_tensors, split_lengths)
 
-    return Splits(cresci_social_spambots_1_tweets_tensors_cuda, *splits)
+    return Splits(cresci_social_spambots_1_tweets_tensors, *splits)
 
 
 @pytest.fixture(scope="module")
@@ -99,6 +99,7 @@ def test_split_ratios_add_to_1():
     assert TRAINING_SPLIT + VALIDATION_SPLIT + TESTING_SPLIT == 1.0
 
 
+@pytest.mark.cuda_only
 def test_cresci_genuine_accounts_split_add_up(cresci_genuine_accounts_split: Splits):
     total = len(cresci_genuine_accounts_split.full)
     training_split = len(cresci_genuine_accounts_split.training)
@@ -108,6 +109,7 @@ def test_cresci_genuine_accounts_split_add_up(cresci_genuine_accounts_split: Spl
     assert training_split + validation_split + testing_split == total
 
 
+@pytest.mark.cuda_only
 def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: Splits):
     total = len(cresci_social_spambots_1_split.full)
     training_split = len(cresci_social_spambots_1_split.training)
@@ -119,25 +121,26 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 
 @needs_cuda
 @needs_cudnn
-def test_accuracy(trainer_cuda: Engine, training_data: DataLoader, validation_data: DataLoader, testing_data: DataLoader):
+@pytest.mark.cuda_only
+def test_accuracy(trainer: Engine, training_data: DataLoader, validation_data: DataLoader, testing_data: DataLoader):
     validator = ignite.engine.create_supervised_evaluator(
-        trainer_cuda.state.model,
+        trainer.state.model,
         metrics={
-            "loss": ignite.metrics.Loss(trainer_cuda.state.criterion),
+            "loss": ignite.metrics.Loss(trainer.state.criterion),
             "accuracy": ignite.metrics.BinaryAccuracy(),
             "recall": ignite.metrics.Recall(average=True),
             "precision": ignite.metrics.Precision(average=True),
         }
     )
 
-    @trainer_cuda.on(Events.STARTED)
+    @trainer.on(Events.STARTED)
     def init_metrics(trainer: Engine):
         trainer.state.loss = []
         trainer.state.accuracy = []
         trainer.state.recall = []
         trainer.state.precision = []
 
-    @trainer_cuda.on(Events.EPOCH_COMPLETED)
+    @trainer.on(Events.EPOCH_COMPLETED)
     def validate(trainer: Engine):
         validator.run(validation_data)
         trainer.state.loss.append(validator.state.metrics["loss"])
@@ -148,15 +151,15 @@ def test_accuracy(trainer_cuda: Engine, training_data: DataLoader, validation_da
     def score_function(trainer: Engine) -> float:
         return -trainer.state.metrics["loss"]
 
-    handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer_cuda)
+    handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer)
     validator.add_event_handler(Events.EPOCH_COMPLETED, handler)
 
-    trainer_cuda.run(training_data, max_epochs=MAX_EPOCHS)
+    trainer.run(training_data, max_epochs=MAX_EPOCHS)
     # TODO: Batching is getting all fucked up, only works with size 1 but even then...
 
-    assert trainer_cuda.state.accuracy[-1] >= 0.50
-    assert trainer_cuda.state.accuracy[-1] >= 0.60
-    assert trainer_cuda.state.accuracy[-1] >= 0.70
-    assert trainer_cuda.state.accuracy[-1] >= 0.80
-    assert trainer_cuda.state.accuracy[-1] >= 0.90
-    assert trainer_cuda.state.accuracy[-1] >= 0.95
+    assert trainer.state.accuracy[-1] >= 0.50
+    assert trainer.state.accuracy[-1] >= 0.60
+    assert trainer.state.accuracy[-1] >= 0.70
+    assert trainer.state.accuracy[-1] >= 0.80
+    assert trainer.state.accuracy[-1] >= 0.90
+    assert trainer.state.accuracy[-1] >= 0.95
