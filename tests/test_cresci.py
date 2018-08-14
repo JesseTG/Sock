@@ -31,6 +31,10 @@ def test_cresci_all_users_loaded(cresci_genuine_accounts_users: CresciUserDatase
     assert len(cresci_genuine_accounts_users) == 3474
 
 
+def test_cresci_tensor_tweet_device_is_correct(device, cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
+    assert cresci_genuine_accounts_tweets_tensors.device == torch.device(device)
+
+
 def test_cresci_tensor_tweet_dataset_is_created(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
     assert cresci_genuine_accounts_tweets_tensors is not None
 

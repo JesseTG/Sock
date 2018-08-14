@@ -34,7 +34,7 @@ def test_unk_is_index_1(glove_embedding: WordEmbeddings):
 
 
 def test_first_word_vector_is_all_zeros(glove_embedding: WordEmbeddings):
-    assert glove_embedding[0].numpy() == pytest.approx(ZERO_VECTOR.numpy())
+    assert glove_embedding[0].cpu().numpy() == pytest.approx(ZERO_VECTOR.numpy())
 
 
 def test_correct_embedding_vector_length(glove_embedding: WordEmbeddings):
@@ -42,7 +42,7 @@ def test_correct_embedding_vector_length(glove_embedding: WordEmbeddings):
 
 
 def test_correct_embedding_values_loaded(glove_embedding: WordEmbeddings):
-    assert glove_embedding.vectors[2].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
+    assert glove_embedding.vectors[2].cpu().numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
 
 
 def test_embedding_length_consistent(glove_embedding: WordEmbeddings):
@@ -50,11 +50,11 @@ def test_embedding_length_consistent(glove_embedding: WordEmbeddings):
 
 
 def test_get_vector_by_int_index(glove_embedding: WordEmbeddings):
-    assert glove_embedding[2].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
+    assert glove_embedding[2].cpu().numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
 
 
 def test_get_vector_by_str_index(glove_embedding: WordEmbeddings):
-    assert glove_embedding["<user>"].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
+    assert glove_embedding["<user>"].cpu().numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
 
 
 def test_encode_returns_tensor(glove_embedding: WordEmbeddings):
@@ -68,7 +68,8 @@ def test_encode_has_correct_value(glove_embedding: WordEmbeddings):
     tokens = "<user> it is not in my video".split()
     encoding = glove_embedding.encode(tokens)
 
-    assert torch.equal(encoding, torch.LongTensor([2, 35, 34, 80, 37, 31, 288]))
+    assert torch.equal(encoding, torch.tensor([2, 35, 34, 80, 37, 31, 288],
+                                              dtype=torch.long, device=glove_embedding.device))
 
 
 def test_embed_from_encoding_returns_tensor(glove_embedding: WordEmbeddings):
@@ -92,7 +93,7 @@ def test_embed_from_encoding_has_correct_value(glove_embedding: WordEmbeddings):
     encoding = glove_embedding.encode(tokens)
     embedding = glove_embedding.embed(encoding)
 
-    assert embedding[0].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
+    assert embedding[0].cpu().numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
 
 
 def test_embed_from_tokens_returns_tensor(glove_embedding: WordEmbeddings):
@@ -113,27 +114,27 @@ def test_embed_from_tokens_has_correct_value(glove_embedding: WordEmbeddings):
     tokens = "<user> it is not in my video".split()
     embedding = glove_embedding.embed(tokens)
 
-    assert embedding[0].numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
+    assert embedding[0].cpu().numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
 
 
 def test_unknown_word_embeds_to_zero_vector(glove_embedding: WordEmbeddings):
     embedding = glove_embedding["<france>"]
 
-    assert embedding.numpy() == pytest.approx(ZERO_VECTOR.numpy())
+    assert embedding.cpu().numpy() == pytest.approx(ZERO_VECTOR.numpy())
 
 
 def test_unknown_word_encodes_to_index_1(glove_embedding: WordEmbeddings):
     tokens = "<france> <spain> <china> <user>".split()
     encoding = glove_embedding.encode(tokens)
 
-    assert torch.equal(encoding, torch.LongTensor([1, 1, 1, 2]))
+    assert torch.equal(encoding, torch.tensor([1, 1, 1, 2], dtype=torch.long, device=glove_embedding.device))
 
 
 def test_embed_empty_string_to_zero(glove_embedding: WordEmbeddings):
     tokens = "".split()
     embedding = glove_embedding.embed(tokens)
 
-    assert embedding[0].numpy() == pytest.approx(ZERO_VECTOR.numpy())
+    assert embedding[0].cpu().numpy() == pytest.approx(ZERO_VECTOR.numpy())
 
 
 def test_embedding_can_create_layer(glove_embedding: WordEmbeddings):
@@ -146,4 +147,4 @@ def test_embedding_layer_can_embed_words(glove_embedding: WordEmbeddings):
     encoding = glove_embedding.encode(tokens)
     layer = glove_embedding.to_layer()
 
-    assert layer(encoding).numpy()[0] == pytest.approx(FIRST_ROW_VECTOR.numpy())
+    assert layer(encoding).cpu().numpy()[0] == pytest.approx(FIRST_ROW_VECTOR.numpy())

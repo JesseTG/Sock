@@ -11,17 +11,18 @@ from torch.utils.data import DataLoader, Dataset, TensorDataset, ConcatDataset, 
 from ignite.engine import Events, Engine
 from ignite.handlers import EarlyStopping
 import ignite.metrics
-from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
+from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
 from sockpuppet.model.dataset.cresci import CresciTensorTweetDataset
+from sockpuppet.model.dataset import sentence_collate, sentence_collate_batch
 from sockpuppet.utils import split_integers
 from tests.marks import needs_cuda, needs_cudnn
 
 VALIDATE_EVERY = 100
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 50
-BATCH_SIZE = 4
+BATCH_SIZE = 8
 
 NOT_BOT = 0
 BOT = 1
@@ -32,8 +33,6 @@ TRAINER_PATIENCE = 10
 
 
 Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
-
-# TODO: Split into integers, then add to the smallest to get them to add up to the original
 
 
 @pytest.fixture(scope="module")
@@ -66,7 +65,7 @@ def training_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_collate_batch)
 
 
 @pytest.fixture(scope="module")
@@ -79,7 +78,7 @@ def validation_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_collate_batch)
 
 
 @pytest.fixture(scope="module")
@@ -92,7 +91,7 @@ def testing_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_collate_batch)
 
 
 def test_split_ratios_add_to_1():
@@ -125,7 +124,7 @@ def test_accuracy(trainer_cuda: Engine, training_data: DataLoader, validation_da
         trainer_cuda.state.model,
         metrics={
             "loss": ignite.metrics.Loss(trainer_cuda.state.criterion),
-            "accuracy": ignite.metrics.CategoricalAccuracy(),
+            "accuracy": ignite.metrics.BinaryAccuracy(),
             "recall": ignite.metrics.Recall(average=True),
             "precision": ignite.metrics.Precision(average=True),
         }

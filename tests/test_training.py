@@ -1,4 +1,5 @@
 from typing import Callable, Sequence, Tuple
+from collections import namedtuple
 import time
 
 import pytest
@@ -12,7 +13,7 @@ from ignite.engine import Events, Engine
 import ignite.metrics
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
-from sockpuppet.model.dataset import LabelDataset
+from sockpuppet.model.dataset import LabelDataset, sentence_collate_batch
 from tests.marks import needs_cuda, needs_cudnn
 
 VALIDATE_EVERY = 100
@@ -33,175 +34,126 @@ def is_monotonically_decreasing(numbers: Sequence[float]) -> bool:
     return True
 
 
+def make_data(device, max_index, total):
+    num_words = max_index - 1
+    size = (total // 2, 32)
+
+    tensor0 = torch.randint(low=0, high=num_words // 2, size=size, dtype=torch.long, device=device)
+    labels0 = torch.zeros([len(tensor0)], dtype=torch.float, device=device)
+    # Zeros have lower-numbered word indices
+
+    tensor1 = torch.randint(low=(num_words // 2) + 1, high=num_words, size=size, dtype=torch.long, device=device)
+    labels1 = torch.ones([len(tensor1)], dtype=torch.float, device=device)
+    # Ones have higher-numbered word indices
+
+    return LabelDataset(torch.cat([tensor0, tensor1]), torch.cat([labels0, labels1]))
+
+
 def sentence_collate(sentences: Sequence[Tuple[LongTensor, LongTensor]]) -> Tuple[LongTensor, LongTensor]:
     sentences = sorted(sentences, key=lambda x: len(x[0]), reverse=True)
 
     padded = pad_sequence([s[0] for s in sentences], False, 0)
-    catted = torch.tensor([s[1] for s in sentences])
+    catted = torch.tensor([s[1] for s in sentences], dtype=torch.long, device=sentences[0][0].dtype)
     return (padded, catted)
 
 
 @pytest.fixture(scope="module")
-def training_dataset(glove_embedding: WordEmbeddings):
-    num_words = len(glove_embedding) - 1
-
-    tensor0 = torch.randint(low=0, high=num_words // 2, size=(128, 32), dtype=torch.long)
-    labels0 = torch.zeros([len(tensor0)], dtype=torch.long)
-
-    tensor1 = torch.randint(low=(num_words // 2) + 1, high=num_words, size=(128, 32), dtype=torch.long)
-    labels1 = torch.ones([len(tensor1)], dtype=torch.long)
-    return LabelDataset(torch.cat([tensor0, tensor1]), torch.cat([labels0, labels1]))
+def training_dataset(device, glove_embedding: WordEmbeddings):
+    return make_data(device, len(glove_embedding), 256)
 
 
 @pytest.fixture(scope="module")
-def training_dataset_cuda(training_dataset: LabelDataset):
-    data = training_dataset.data.cuda()
-    labels = training_dataset.labels.cuda()
-    return LabelDataset(data, labels)
+def validation_dataset(device, glove_embedding: WordEmbeddings):
+    return make_data(device, len(glove_embedding), 1024)
 
 
-@pytest.fixture(scope="module")
-def validation_dataset(glove_embedding: WordEmbeddings):
-    num_words = len(glove_embedding) - 1
-
-    tensor0 = torch.randint(low=0, high=num_words // 2, size=(512, 32), dtype=torch.long)
-    labels0 = torch.zeros([len(tensor0)], dtype=torch.long)
-
-    tensor1 = torch.randint(low=(num_words // 2) + 1, high=num_words, size=(512, 32), dtype=torch.long)
-    labels1 = torch.ones([len(tensor1)], dtype=torch.long)
-    return LabelDataset(torch.cat([tensor0, tensor1]), torch.cat([labels0, labels1]))
+@pytest.fixture(scope="module", params=[1, BATCH_SIZE])
+def training_loader(request, training_dataset: LabelDataset):
+    return DataLoader(training_dataset, batch_size=request.param)
 
 
-@pytest.fixture(scope="module")
-def validation_dataset_cuda(validation_dataset: LabelDataset):
-    data = validation_dataset.data.cuda()
-    labels = validation_dataset.labels.cuda()
-    return LabelDataset(data, labels)
+@pytest.fixture(scope="module", params=[1, BATCH_SIZE])
+def validation_loader(request, validation_dataset: Dataset):
+    return DataLoader(validation_dataset, batch_size=request.param)
 
 
-@pytest.fixture(scope="module")
-def training_data(training_dataset: LabelDataset):
-    return DataLoader(training_dataset, batch_size=1)
+def test_training_runs(trainer: Engine, training_loader: DataLoader):
 
-
-@pytest.fixture(scope="module")
-def training_data_batched(training_dataset: LabelDataset):
-    return DataLoader(training_dataset, batch_size=BATCH_SIZE)
-
-
-@pytest.fixture(scope="module")
-def training_data_cuda(training_dataset_cuda: LabelDataset):
-    return DataLoader(training_dataset_cuda, batch_size=1)
-
-
-@pytest.fixture(scope="module")
-def training_data_cuda_batched(training_dataset_cuda: LabelDataset):
-    return DataLoader(training_dataset_cuda, batch_size=BATCH_SIZE)
-
-
-@pytest.fixture(scope="module")
-def validation_data(validation_dataset: Dataset):
-    return DataLoader(validation_dataset, batch_size=1)
-
-
-@pytest.fixture(scope="module")
-def validation_data_batched(validation_dataset: Dataset):
-    return DataLoader(validation_dataset, batch_size=BATCH_SIZE)
-
-
-@pytest.fixture(scope="module")
-def validation_data_cuda(validation_dataset_cuda: LabelDataset):
-    return DataLoader(validation_dataset_cuda, batch_size=1)
-
-
-@pytest.fixture(scope="module")
-def validation_data_cuda_batched(validation_dataset_cuda: Dataset):
-    return DataLoader(validation_dataset_cuda, batch_size=BATCH_SIZE)
-
-
-def test_training_runs_cpu(trainer_cpu: Engine, training_data: DataLoader):
-    result = trainer_cpu.run(training_data, max_epochs=MAX_EPOCHS)
+    result = trainer.run(training_loader, max_epochs=MAX_EPOCHS)
 
     assert result is not None
 
 
-def test_training_runs_cpu_batched(trainer_cpu: Engine, training_data_batched: DataLoader):
-    result = trainer_cpu.run(training_data_batched, max_epochs=MAX_EPOCHS)
+# @needs_cuda
+# def test_training_cuda_faster_than_cpu(trainer_cpu: Engine, trainer_cuda: Engine, training_loader: DataLoader, training_loader_cuda: DataLoader):
+#     start_cpu = time.time()
+#     result_cpu = trainer_cpu.run(training_loader, max_epochs=MAX_EPOCHS)
+#     duration_cpu = time.time() - start_cpu
 
-    assert result is not None
+#     start_cuda = time.time()
+#     result_cuda = trainer_cuda.run(training_loader_cuda, max_epochs=MAX_EPOCHS)
+#     duration_cuda = time.time() - start_cuda
 
-
-@needs_cuda
-def test_training_runs_cuda(trainer_cuda: Engine, training_data_cuda: DataLoader):
-    result = trainer_cuda.run(training_data_cuda, max_epochs=MAX_EPOCHS)
-
-    assert result is not None
-
-
-@needs_cuda
-def test_training_runs_cuda_batched(trainer_cuda: Engine, training_data_cuda_batched: DataLoader):
-    result = trainer_cuda.run(training_data_cuda_batched, max_epochs=MAX_EPOCHS)
-
-    assert result is not None
-
-
-@needs_cuda
-def test_training_cuda_faster_than_cpu(trainer_cpu: Engine, trainer_cuda: Engine, training_data: DataLoader, training_data_cuda: DataLoader):
-    start_cpu = time.time()
-    result_cpu = trainer_cpu.run(training_data, max_epochs=MAX_EPOCHS)
-    duration_cpu = time.time() - start_cpu
-
-    start_cuda = time.time()
-    result_cuda = trainer_cuda.run(training_data_cuda, max_epochs=MAX_EPOCHS)
-    duration_cuda = time.time() - start_cuda
-
-    assert duration_cuda < duration_cpu
+#     assert duration_cuda < duration_cpu
 
 # TODO: Ensure non-blocking CUDA works
 # TODO: Ensure pinned memory works
 
 
-def test_training_doesnt_change_word_embeddings(trainer_cpu: Engine, training_data: DataLoader, glove_embedding: WordEmbeddings):
+def test_training_doesnt_change_word_embeddings(trainer: Engine, training_loader: DataLoader, glove_embedding: WordEmbeddings):
     embeddings = torch.tensor(glove_embedding.vectors)
-    result = trainer_cpu.run(training_data, max_epochs=MAX_EPOCHS)
+    result = trainer.run(training_loader, max_epochs=MAX_EPOCHS)
 
-    assert trainer_cpu.state.model.word_embeddings.vectors.numpy()[0] == pytest.approx(embeddings.numpy()[0])
-    assert trainer_cpu.state.model.word_embeddings.vectors.data_ptr() != embeddings.data_ptr()
+    assert trainer.state.model.word_embeddings.vectors[0].cpu().numpy() == pytest.approx(embeddings[0].cpu().numpy())
+    assert trainer.state.model.word_embeddings.vectors.data_ptr() != embeddings.data_ptr()
 
 
-@needs_cuda
-def test_training_improves_metrics(trainer_cuda: Engine, training_data_cuda: DataLoader, validation_data_cuda: DataLoader):
+def test_training_improves_metrics(device, trainer: Engine, training_loader: DataLoader, validation_loader: DataLoader):
+    def tf(y):
+        # TODO: Move to general utility function elsewhere
+        return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
+
+    mapping = torch.tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
+
+    def tf_2class(output):
+        y_pred, y = output
+
+        y_pred = mapping.index_select(0, y_pred.round().to(torch.long))
+
+        # TODO: Recall metric isn't meant to be used for a binary class, so expand 0 to [1, 0] and 1 to [0, 1]
+        return (y_pred, y.to(torch.long))
+
     validator = ignite.engine.create_supervised_evaluator(
-        trainer_cuda.state.model,
+        trainer.state.model,
         metrics={
-            "loss": ignite.metrics.Loss(trainer_cuda.state.criterion),
-            "accuracy": ignite.metrics.CategoricalAccuracy(),
-            "recall": ignite.metrics.Recall(average=True),
-            "precision": ignite.metrics.Precision(average=True),
+            "loss": ignite.metrics.Loss(trainer.state.criterion, output_transform=tf),
+            "accuracy": ignite.metrics.BinaryAccuracy(output_transform=tf),
+            "recall": ignite.metrics.Recall(average=True, output_transform=tf_2class),
+            "precision": ignite.metrics.Precision(average=True, output_transform=tf_2class),
         }
     )
 
-    @trainer_cuda.on(Events.STARTED)
+    @trainer.on(Events.STARTED)
     def init_metrics(trainer: Engine):
         trainer.state.loss = []
         trainer.state.accuracy = []
         trainer.state.recall = []
         trainer.state.precision = []
 
-    @trainer_cuda.on(Events.EPOCH_COMPLETED)
+    @trainer.on(Events.EPOCH_COMPLETED)
     def validate(trainer: Engine):
-        validator.run(validation_data_cuda)
+        validator.run(validation_loader)
         trainer.state.loss.append(validator.state.metrics["loss"])
         trainer.state.accuracy.append(validator.state.metrics["accuracy"])
         trainer.state.recall.append(validator.state.metrics["recall"])
         trainer.state.precision.append(validator.state.metrics["precision"])
 
-    trainer_cuda.run(training_data_cuda, max_epochs=50)
+    trainer.run(training_loader, max_epochs=50)
 
-    assert is_monotonically_decreasing(trainer_cuda.state.loss)
-    assert trainer_cuda.state.accuracy[0] < trainer_cuda.state.accuracy[-1]
-    assert trainer_cuda.state.recall[0] < trainer_cuda.state.recall[-1]
-    assert trainer_cuda.state.precision[0] < trainer_cuda.state.precision[-1]
+    assert trainer.state.loss[0] > trainer.state.loss[-1]
+    assert trainer.state.accuracy[0] < trainer.state.accuracy[-1]
+    assert trainer.state.recall[0] < trainer.state.recall[-1]
+    assert trainer.state.precision[0] < trainer.state.precision[-1]
 
-    assert trainer_cuda.state.accuracy[-1] >= 0.25
-    assert trainer_cuda.state.accuracy[-1] >= 0.45
+    assert trainer.state.accuracy[-1] >= 0.25
+    assert trainer.state.accuracy[-1] >= 0.45
