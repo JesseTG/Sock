@@ -108,6 +108,7 @@ def test_training_doesnt_change_word_embeddings(trainer: Engine, training_loader
     assert trainer.state.model.word_embeddings.vectors.data_ptr() != embeddings.data_ptr()
 
 
+@pytest.mark.cuda_only  # CUDA only, to save time
 def test_training_improves_metrics(device, trainer: Engine, training_loader: DataLoader, validation_loader: DataLoader):
     def tf(y):
         # TODO: Move to general utility function elsewhere
@@ -148,7 +149,7 @@ def test_training_improves_metrics(device, trainer: Engine, training_loader: Dat
         trainer.state.recall.append(validator.state.metrics["recall"])
         trainer.state.precision.append(validator.state.metrics["precision"])
 
-    trainer.run(training_loader, max_epochs=50)
+    trainer.run(training_loader, max_epochs=25)
 
     assert trainer.state.loss[0] > trainer.state.loss[-1]
     assert trainer.state.accuracy[0] < trainer.state.accuracy[-1]
