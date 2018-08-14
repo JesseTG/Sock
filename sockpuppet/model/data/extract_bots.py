@@ -16,7 +16,7 @@ def main():
 
             if "user" in tweet:
                 user = tweet["user"]
-                if "screen_name" in user and ["screen_name"] in userset:
+                if "screen_name" in user and user["screen_name"] in userset:
                     print(line, end="")
 
 if __name__ == "__main__":
