@@ -36,6 +36,7 @@ def test_iterate_dataloader_one_thread(dataset: Dataset, sampler: Sampler):
     assert len(tensors) > 0
 
 
+@pytest.mark.cpu_only
 def test_iterate_dataloader_parallel(dataset: Dataset, sampler: Sampler):
     loader = DataLoader(dataset=dataset, sampler=sampler, num_workers=2)
     tensors = [t for t in loader]
