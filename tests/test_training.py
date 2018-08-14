@@ -18,7 +18,7 @@ from tests.marks import needs_cuda, needs_cudnn
 
 VALIDATE_EVERY = 100
 CHECKPOINT_EVERY = 100
-MAX_EPOCHS = 10
+MAX_EPOCHS = 5
 BATCH_SIZE = 8
 
 
