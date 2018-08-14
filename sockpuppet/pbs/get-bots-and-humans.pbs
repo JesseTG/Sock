@@ -28,8 +28,8 @@ function extract() {
 
     7z e -so "$ARCHIVE" | \
         tee \
-            >(python3 -OO "$EXTRACT_BOT_SCRIPT" $BOT_LIST" > "$BOT_DIR/$BASENAME.bots.jsonl") \
-            >(python3 -OO "$EXTRACT_BOT_SCRIPT" $HUMAN_LIST" > "$HUMAN_DIR/$BASENAME.humans.jsonl") \
+            >(python3 -OO "$EXTRACT_BOT_SCRIPT" "$BOT_LIST" > "$BOT_DIR/$BASENAME.bots.jsonl") \
+            >(python3 -OO "$EXTRACT_BOT_SCRIPT" "$HUMAN_LIST" > "$HUMAN_DIR/$BASENAME.humans.jsonl") \
         > /dev/null
 
     echo "Done with processing $ARCHIVE to $OUTDIR"
