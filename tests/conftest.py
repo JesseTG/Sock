@@ -26,14 +26,21 @@ SOCIAL_SPAMBOTS_1_USER_PATH = f"{CRESCI_PATH}/social_spambots_1.csv/users.csv"
 GLOVE_PATH = f"{TestConfig.TRAINING_DATA_PATH}/glove/glove.twitter.27B.25d.txt"
 
 
-def pytest_collection_modifyitems(config, items):
-    if config.getoption("--profile"):
-        # TODO: Detect the profiler plugin
-        return
-    skip_slow = pytest.mark.skip(reason="Only run if profiling")
+def pytest_collection_modifyitems(config, items: Sequence[Item]):
+    to_remove = set()
     for item in items:
-        if "profile" in item.keywords:
-            item.add_marker(skip_slow)
+        if "cpu_only" in item.keywords and item.callspec.params["device"] != "cpu":
+            to_remove.add(item)
+        elif "cuda_only" in item.keywords and not item.callspec.params["device"].startswith("cuda"):
+            to_remove.add(item)
+
+    for i in to_remove:
+        items.remove(i)
+
+
+def pytest_sessionstart(session: Session):
+    if torch.cuda.is_available() and "spawn" in torch.multiprocessing.get_all_start_methods():
+        torch.multiprocessing.set_start_method("spawn")
 
 
 @pytest.fixture
