@@ -24,6 +24,8 @@ BATCH_SIZE = 8
 
 torch.manual_seed(0)
 
+DataLoaders = namedtuple("DataLoaders", ["training", "validation"])
+
 
 def is_monotonically_decreasing(numbers: Sequence[float]) -> bool:
     # TODO: Is there a Pythonic one-liner here?
@@ -49,14 +51,6 @@ def make_data(device, max_index, total):
     return LabelDataset(torch.cat([tensor0, tensor1]), torch.cat([labels0, labels1]))
 
 
-def sentence_collate(sentences: Sequence[Tuple[LongTensor, LongTensor]]) -> Tuple[LongTensor, LongTensor]:
-    sentences = sorted(sentences, key=lambda x: len(x[0]), reverse=True)
-
-    padded = pad_sequence([s[0] for s in sentences], False, 0)
-    catted = torch.tensor([s[1] for s in sentences], dtype=torch.long, device=sentences[0][0].dtype)
-    return (padded, catted)
-
-
 @pytest.fixture(scope="module")
 def training_dataset(device, glove_embedding: WordEmbeddings):
     return make_data(device, len(glove_embedding), 256)
@@ -68,18 +62,16 @@ def validation_dataset(device, glove_embedding: WordEmbeddings):
 
 
 @pytest.fixture(scope="module", params=[1, BATCH_SIZE])
-def training_loader(request, training_dataset: LabelDataset):
-    return DataLoader(training_dataset, batch_size=request.param)
+def dataloaders(request, training_dataset: LabelDataset, validation_dataset: LabelDataset):
+    return DataLoaders(
+        DataLoader(training_dataset, batch_size=request.param),
+        DataLoader(validation_dataset, batch_size=request.param),
+    )
 
 
-@pytest.fixture(scope="module", params=[1, BATCH_SIZE])
-def validation_loader(request, validation_dataset: Dataset):
-    return DataLoader(validation_dataset, batch_size=request.param)
+def test_training_runs(trainer: Engine, dataloaders: DataLoaders):
 
-
-def test_training_runs(trainer: Engine, training_loader: DataLoader):
-
-    result = trainer.run(training_loader, max_epochs=MAX_EPOCHS)
+    result = trainer.run(dataloaders.training, max_epochs=MAX_EPOCHS)
 
     assert result is not None
 
@@ -100,16 +92,17 @@ def test_training_runs(trainer: Engine, training_loader: DataLoader):
 # TODO: Ensure pinned memory works
 
 
-def test_training_doesnt_change_word_embeddings(trainer: Engine, training_loader: DataLoader, glove_embedding: WordEmbeddings):
+def test_training_doesnt_change_word_embeddings(trainer: Engine, dataloaders: DataLoaders, glove_embedding: WordEmbeddings):
     embeddings = torch.tensor(glove_embedding.vectors)
-    result = trainer.run(training_loader, max_epochs=MAX_EPOCHS)
+    result = trainer.run(dataloaders.training, max_epochs=MAX_EPOCHS)
 
-    assert trainer.state.model.word_embeddings.vectors[0].cpu().numpy() == pytest.approx(embeddings[0].cpu().numpy())
-    assert trainer.state.model.word_embeddings.vectors.data_ptr() != embeddings.data_ptr()
+    vectors = trainer.state.model.word_embeddings.vectors
+    assert vectors.data_ptr() != embeddings.data_ptr()
+    assert vectors[0].cpu().numpy() == pytest.approx(embeddings[0].cpu().numpy())
 
 
 @pytest.mark.cuda_only  # CUDA only, to save time
-def test_training_improves_metrics(device, trainer: Engine, training_loader: DataLoader, validation_loader: DataLoader):
+def test_training_improves_metrics(device, trainer: Engine, dataloaders: DataLoaders):
     def tf(y):
         # TODO: Move to general utility function elsewhere
         return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
@@ -143,13 +136,13 @@ def test_training_improves_metrics(device, trainer: Engine, training_loader: Dat
 
     @trainer.on(Events.EPOCH_COMPLETED)
     def validate(trainer: Engine):
-        validator.run(validation_loader)
+        validator.run(dataloaders.validation)
         trainer.state.loss.append(validator.state.metrics["loss"])
         trainer.state.accuracy.append(validator.state.metrics["accuracy"])
         trainer.state.recall.append(validator.state.metrics["recall"])
         trainer.state.precision.append(validator.state.metrics["precision"])
 
-    trainer.run(training_loader, max_epochs=25)
+    trainer.run(dataloaders.training, max_epochs=25)
 
     assert trainer.state.loss[0] > trainer.state.loss[-1]
     assert trainer.state.accuracy[0] < trainer.state.accuracy[-1]
