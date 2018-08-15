@@ -132,7 +132,7 @@ def test_lstm_returns_1d_float_tensor_from_list_of_tensors(lstm: ContextualLSTM)
     assert result.shape == torch.Size([len(encoding)])
 
 
-def test_lstm_returns_1d_float_tensor_from_tensor(lstm: ContextualLSTM, something):
+def test_lstm_returns_1d_float_tensor_from_tensor(lstm: ContextualLSTM):
     encoding = torch.tensor([
         [0, 1, 5, 8, 3, 1],
         [1, 4, 6, 1, 9, 7],
