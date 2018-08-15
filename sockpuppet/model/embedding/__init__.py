@@ -6,24 +6,30 @@ import torch
 from torch import Tensor
 from torch.nn import Embedding
 import pandas
+from pandas import DataFrame
 
 TORCH_INT_DTYPES = (torch.uint8, torch.int8, torch.short, torch.int, torch.long)
 
 
 class WordEmbeddings:
     # TODO: Add support for cuda devices
-    def __init__(self, path: str, dim: int, device="cpu"):
-        with open(path, "r") as file:
-            data = pandas.read_table(
-                file,
-                delim_whitespace=True,
-                header=None,
-                engine="c",
-                encoding="utf8",
-                na_filter=False,
-                memory_map=True,
-                quoting=csv.QUOTE_NONE
-            )
+    def __init__(self, path: Union[DataFrame, str], dim: int, device="cpu"):
+        if isinstance(path, str):
+            with open(path, "r") as file:
+                data = pandas.read_table(
+                    file,
+                    delim_whitespace=True,
+                    header=None,
+                    engine="c",
+                    encoding="utf8",
+                    na_filter=False,
+                    memory_map=True,
+                    quoting=csv.QUOTE_NONE
+                )
+        elif isinstance(path, DataFrame):
+            data = path
+        else:
+            raise TypeError(f"Expected a str or DataFrame, got {path}")
 
         self.dim = dim
         self.words = data[0].tolist()  # type: list

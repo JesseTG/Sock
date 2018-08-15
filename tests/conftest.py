@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Defines fixtures available to all tests."""
 
-from typing import Callable, Sequence
+import csv
 import sys
-import pdb
+from typing import Callable, Sequence
 
 import pytest
 from pytest import Item, Session
@@ -13,6 +13,9 @@ import torch.multiprocessing
 import torch
 import ignite
 from ignite.engine import Events, Engine
+
+import pandas
+from pandas import DataFrame
 
 from sockpuppet.app import create_app
 from sockpuppet.database import db as _db
@@ -94,10 +97,24 @@ def device(request):
 
 
 @pytest.fixture(scope="session")
-def glove_embedding(device):
+def glove_data():
+    return pandas.read_table(
+        GLOVE_PATH,
+        delim_whitespace=True,
+        header=None,
+        engine="c",
+        encoding="utf8",
+        na_filter=False,
+        memory_map=True,
+        quoting=csv.QUOTE_NONE
+    )
+
+
+@pytest.fixture(scope="session")
+def glove_embedding(device, glove_data: DataFrame):
     """Load the GloVe embeddings."""
     # TODO: Load the pandas frame from another source and pass that source into here
-    return WordEmbeddings(GLOVE_PATH, 25, device)
+    return WordEmbeddings(glove_data, 25, device)
 
 
 @pytest.fixture(scope="function")
