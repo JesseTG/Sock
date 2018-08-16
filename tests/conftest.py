@@ -24,7 +24,7 @@ from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.dataset.cresci import CresciTweetDataset, CresciUserDataset, CresciTensorTweetDataset
 from sockpuppet.model.dataset.twitter_tokenize import tokenize
-from .marks import needs_cuda, needs_cudnn
+from .marks import *
 
 CRESCI_PATH = f"{TestConfig.TRAINING_DATA_PATH}/cresci-2017/datasets_full.csv"
 GENUINE_ACCOUNT_TWEET_PATH = f"{CRESCI_PATH}/genuine_accounts.csv/tweets.csv"
@@ -34,12 +34,14 @@ SOCIAL_SPAMBOTS_1_USER_PATH = f"{CRESCI_PATH}/social_spambots_1.csv/users.csv"
 GLOVE_PATH = f"{TestConfig.TRAINING_DATA_PATH}/glove/glove.twitter.27B.25d.txt"
 
 
-def pytest_collection_modifyitems(config, items: Sequence[Item]):
+def pytest_collection_modifyitems(session, config, items: Sequence[Item]):
     to_remove = set()
     for item in items:
-        if "cpu_only" in item.keywords and item.callspec.params["device"] != "cpu":
-            to_remove.add(item)
-        elif "cuda_only" in item.keywords and not item.callspec.params["device"].startswith("cuda"):
+        devices = item.get_closest_marker("devices")
+        if devices is not None:
+            # If we're explicitly using a subset of devices...
+            if item.callspec.params["device"] not in devices.args:
+                # If this device isn't in the list...
             to_remove.add(item)
 
     for i in to_remove:
@@ -49,6 +51,21 @@ def pytest_collection_modifyitems(config, items: Sequence[Item]):
 def pytest_sessionstart(session: Session):
     if torch.cuda.is_available() and "spawn" in torch.multiprocessing.get_all_start_methods():
         torch.multiprocessing.set_start_method("spawn")
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item: Item, call):
+    result = yield
+
+    if item.function is not None and item.get_closest_marker("record_runtime") is not None:
+        # If we want to record the length of time this test runs for...
+        if not hasattr(item.function, "duration"):
+            # If we haven't yet recorded this function's runtime...
+            item.function.duration = dict()
+
+        if result.result.passed:
+            # If this test succeeded...
+            item.function.duration[item.name] = result.result.duration
 
 
 @pytest.fixture
