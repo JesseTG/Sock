@@ -2,8 +2,9 @@
 -r prod.txt
 
 # Testing
-pytest==3.5.0
+pytest==3.7.1
 pytest-profiling
+pytest-dependency
 WebTest==2.0.29
 factory-boy==2.10.0
 
