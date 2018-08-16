@@ -29,7 +29,6 @@ class ContextualLSTM(nn.Module):
         self.output = nn.Linear(self.dense2.out_features, 1)
 
         self.to(device)
-        # note: there are special data parallelism modules.  read about them!
         # is there a layer that takes the weighted average of two like-shaped tensors? would be useful
         # for mixing the main output and the aux output like the paper describes
         # if not, just mix them myself
@@ -58,7 +57,6 @@ class ContextualLSTM(nn.Module):
         # OUT: One FloatTensor
         self.hidden = self._init_hidden(len(sentences))
 
-        # TODO: Reset hidden state before each batch
         sentences = sorted(sentences, key=len, reverse=True)
         lengths = LongTensor([len(s) for s in sentences], device=self.device)
 
