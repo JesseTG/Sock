@@ -2,7 +2,7 @@ import pytest
 import torch
 from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
-from tests.marks import needs_cuda, needs_cudnn, cuda_only
+from tests.marks import *
 
 
 def test_devices_are_the_same(lstm: ContextualLSTM, glove_embedding: WordEmbeddings):
@@ -23,20 +23,20 @@ def test_has_parameters(lstm: ContextualLSTM):
     assert parameters != []
 
 
-@cuda_only
+@devices("cuda", "dp")
 @needs_cuda
 def test_lstm_moves_all_data_to_cuda(lstm: ContextualLSTM):
     for p in lstm.parameters():
         assert p.is_cuda
 
 
-@cuda_only
+@devices("cuda", "dp")
 @needs_cuda
 def test_lstm_moves_embeddings_to_cuda(lstm: ContextualLSTM):
     assert lstm.embeddings.weight.is_cuda
 
 
-@cuda_only
+@devices("cuda", "dp")
 @needs_cuda
 def test_lstm_needs_input_from_same_device(lstm: ContextualLSTM):
     with pytest.raises(RuntimeError):
@@ -143,3 +143,9 @@ def test_lstm_returns_1d_float_tensor_from_tensor(lstm: ContextualLSTM):
     result = lstm(encoding)
     assert result.dtype.is_floating_point
     assert result.shape == torch.Size([len(encoding)])
+
+
+def test_get_lstm_cpu(request, lstm_cpu: ContextualLSTM):
+    assert lstm_cpu is not None
+    assert type(lstm_cpu) == ContextualLSTM
+    assert lstm_cpu.device.type == "cpu"

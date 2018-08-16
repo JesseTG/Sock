@@ -3,6 +3,7 @@
 
 import csv
 import sys
+import time
 from typing import Callable, Sequence
 
 import pytest
@@ -11,6 +12,7 @@ from webtest import TestApp
 
 import torch.multiprocessing
 import torch
+from torch.nn import Module, DataParallel
 import ignite
 from ignite.engine import Events, Engine
 
@@ -42,7 +44,7 @@ def pytest_collection_modifyitems(session, config, items: Sequence[Item]):
             # If we're explicitly using a subset of devices...
             if item.callspec.params["device"] not in devices.args:
                 # If this device isn't in the list...
-            to_remove.add(item)
+                to_remove.add(item)
 
     for i in to_remove:
         items.remove(i)
@@ -108,7 +110,11 @@ def user(db):
     return user
 
 
-@pytest.fixture(scope="session", params=["cpu", pytest.param("cuda", marks=[needs_cuda, needs_cudnn])])
+@pytest.fixture(scope="session", params=[
+    "cpu",
+    pytest.param("cuda", marks=[needs_cuda, needs_cudnn]),
+    pytest.param("dp", marks=[needs_cuda, needs_cudnn, needs_multiple_gpus])
+])
 def device(request):
     return request.param
 
@@ -128,31 +134,50 @@ def glove_data():
 
 
 @pytest.fixture(scope="session")
-def glove_embedding(device, glove_data: DataFrame):
+def glove_embedding(request, device, glove_embedding_cpu: WordEmbeddings, glove_embedding_cuda: WordEmbeddings):
     """Load the GloVe embeddings."""
-    # TODO: Load the pandas frame from another source and pass that source into here
-    return WordEmbeddings(glove_data, 25, device)
+    return request.getfixturevalue(f"glove_embedding_{device}")
+
+
+@pytest.fixture(scope="session")
+def glove_embedding_cpu(glove_data: DataFrame):
+    """Load the GloVe embeddings onto CPU memory."""
+    return WordEmbeddings(glove_data, 25, "cpu")
+
+
+@pytest.fixture(scope="session")
+def glove_embedding_cuda(glove_data: DataFrame):
+    """Load the GloVe embeddings onto CUDA memory."""
+    return WordEmbeddings(glove_data, 25, "cuda")
+
+
+@pytest.fixture(scope="session")
+def glove_embedding_dp(glove_embedding_cuda: WordEmbeddings):
+    return glove_embedding_cuda
 
 
 @pytest.fixture(scope="function")
-def lstm(device: str, glove_embedding: WordEmbeddings):
+def lstm(request, device: str):
     '''Creates a ContextualLSTM of either CPU or CUDA type'''
-    lstm = ContextualLSTM(glove_embedding, device=device)
-    return lstm
+    return request.getfixturevalue(f"lstm_{device}")
 
 
 @pytest.fixture(scope="function")
-def lstm_cuda(glove_embedding: WordEmbeddings):
-    '''Creates a ContextualLSTM specifically on CUDA'''
-    lstm = ContextualLSTM(glove_embedding, device="cuda")
-    torch.cuda.synchronize()
-    return lstm
+def lstm_cpu(glove_embedding_cpu: WordEmbeddings):
+    '''Creates a ContextualLSTM of CPU type'''
+    return ContextualLSTM(glove_embedding_cpu, device=glove_embedding_cpu.device)
 
 
 @pytest.fixture(scope="function")
-def lstm_cpu(glove_embedding: WordEmbeddings):
-    lstm = ContextualLSTM(glove_embedding, device="cpu")
-    return lstm
+def lstm_cuda(glove_embedding_cuda: WordEmbeddings):
+    '''Creates a ContextualLSTM of CUDA type'''
+    return ContextualLSTM(glove_embedding_cuda, device=glove_embedding_cuda.device)
+
+
+@pytest.fixture(scope="function")
+def lstm_dp(lstm_cuda: ContextualLSTM):
+    '''Creates a ContextualLSTM of CUDA type'''
+    return DataParallel(lstm_cuda)
 
 
 @pytest.fixture(scope="session")
@@ -180,55 +205,93 @@ def cresci_social_spambots_1_users():
 
 
 @pytest.fixture(scope="session")
-def cresci_genuine_accounts_tweets_tensors(device, cresci_genuine_accounts_tweets, glove_embedding):
+def cresci_genuine_accounts_tweets_tensors(request, device: str):
+    return request.getfixturevalue(f"cresci_genuine_accounts_tweets_tensors_{device}")
+
+
+@pytest.fixture(scope="session")
+def cresci_genuine_accounts_tweets_tensors_cpu(cresci_genuine_accounts_tweets, glove_embedding_cpu):
     return CresciTensorTweetDataset(
         data_source=cresci_genuine_accounts_tweets,
-        embeddings=glove_embedding,
+        embeddings=glove_embedding_cpu,
         tokenizer=tokenize,
-        device=device
+        device="cpu"
     )
 
 
 @pytest.fixture(scope="session")
-def cresci_social_spambots_1_tweets_tensors(device, cresci_social_spambots_1_tweets, glove_embedding):
+def cresci_genuine_accounts_tweets_tensors_cuda(cresci_genuine_accounts_tweets, glove_embedding_cuda):
+    return CresciTensorTweetDataset(
+        data_source=cresci_genuine_accounts_tweets,
+        embeddings=glove_embedding_cuda,
+        tokenizer=tokenize,
+        device="cuda"
+    )
+
+
+@pytest.fixture(scope="session")
+def cresci_genuine_accounts_tweets_tensors_dp(cresci_genuine_accounts_tweets_tensors_cuda):
+    return cresci_genuine_accounts_tweets_tensors_cuda
+
+
+@pytest.fixture(scope="session")
+def cresci_social_spambots_1_tweets_tensors(request, device: str):
+    return request.getfixturevalue(f"cresci_social_spambots_1_tweets_tensors_{device}")
+
+
+@pytest.fixture(scope="session")
+def cresci_social_spambots_1_tweets_tensors_cpu(cresci_social_spambots_1_tweets, glove_embedding_cpu):
     return CresciTensorTweetDataset(
         data_source=cresci_social_spambots_1_tweets,
-        embeddings=glove_embedding,
+        embeddings=glove_embedding_cpu,
         tokenizer=tokenize,
-        device=device
+        device="cpu"
     )
 
 
-def _trainer(lstm: ContextualLSTM):
-    lstm.train(True)
-    optimizer = torch.optim.SGD(
-        lstm.parameters(),
-        lr=0.01
+@pytest.fixture(scope="session")
+def cresci_social_spambots_1_tweets_tensors_cuda(cresci_social_spambots_1_tweets, glove_embedding_cuda):
+    return CresciTensorTweetDataset(
+        data_source=cresci_social_spambots_1_tweets,
+        embeddings=glove_embedding_cuda,
+        tokenizer=tokenize,
+        device="cuda"
     )
-    criterion = torch.nn.BCELoss()
-    trainer = ignite.engine.create_supervised_trainer(lstm, optimizer, criterion, lstm.device)
-    trainer.state = ignite.engine.State()
 
-    @trainer.on(Events.STARTED)
-    def set_model_in_state(trainer):
-        trainer.state.model = lstm
-        trainer.state.criterion = criterion
 
-    set_model_in_state(trainer)
-
-    return trainer
+@pytest.fixture(scope="session")
+def cresci_social_spambots_1_tweets_tensors_dp(cresci_social_spambots_1_tweets_tensors_cuda):
+    return cresci_social_spambots_1_tweets_tensors_cuda
 
 
 @pytest.fixture(scope="function")
-def trainer(lstm: ContextualLSTM):
-    return _trainer(lstm)
+def make_trainer():
+    def _make(device, model: Module):
+        model.train(True)
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            lr=0.01
+        )
+        criterion = torch.nn.BCELoss()
+        trainer = ignite.engine.create_supervised_trainer(model, optimizer, criterion, device)
+        trainer.state = ignite.engine.State()
+
+        @trainer.on(Events.STARTED)
+        def set_model_in_state(trainer):
+            trainer.state.model = model
+            trainer.state.criterion = criterion
+
+        @trainer.on(Events.COMPLETED)
+        def finish_training(trainer):
+            trainer.state.model.train(False)
+
+        set_model_in_state(trainer)
+
+        return trainer
+
+    return _make
 
 
 @pytest.fixture(scope="function")
-def trainer_cpu(lstm_cpu: ContextualLSTM):
-    return _trainer(lstm_cpu)
-
-
-@pytest.fixture(scope="function")
-def trainer_cuda(lstm_cuda: ContextualLSTM):
-    return _trainer(lstm_cuda)
+def trainer(make_trainer, device, lstm: ContextualLSTM):
+    return make_trainer(device, lstm)

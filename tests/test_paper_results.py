@@ -17,7 +17,7 @@ from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
 from sockpuppet.model.dataset.cresci import CresciTensorTweetDataset
 from sockpuppet.model.dataset import sentence_collate, sentence_collate_batch
 from sockpuppet.utils import split_integers
-from tests.marks import needs_cuda, needs_cudnn
+from tests.marks import *
 
 VALIDATE_EVERY = 2
 CHECKPOINT_EVERY = 100
@@ -99,7 +99,7 @@ def test_split_ratios_add_to_1():
     assert TRAINING_SPLIT + VALIDATION_SPLIT + TESTING_SPLIT == 1.0
 
 
-@pytest.mark.cuda_only
+@devices("cuda")
 def test_cresci_genuine_accounts_split_add_up(cresci_genuine_accounts_split: Splits):
     total = len(cresci_genuine_accounts_split.full)
     training_split = len(cresci_genuine_accounts_split.training)
@@ -109,7 +109,7 @@ def test_cresci_genuine_accounts_split_add_up(cresci_genuine_accounts_split: Spl
     assert training_split + validation_split + testing_split == total
 
 
-@pytest.mark.cuda_only
+@devices("cuda")
 def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: Splits):
     total = len(cresci_social_spambots_1_split.full)
     training_split = len(cresci_social_spambots_1_split.training)
@@ -121,7 +121,7 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 
 @needs_cuda
 @needs_cudnn
-@pytest.mark.cuda_only
+@devices("cuda", "dp")
 def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation_data: DataLoader, testing_data: DataLoader):
     def tf(y):
         # TODO: Move to general utility function elsewhere
@@ -154,7 +154,7 @@ def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation
         trainer.state.recall = []
         trainer.state.precision = []
 
-    @trainer.on(Events.ITERATION_COMPLETED)
+    @trainer.on(Events.EPOCH_COMPLETED)
     def validate(trainer: Engine):
         if trainer.state.epoch % VALIDATE_EVERY == 0:
             validator.run(validation_data)

@@ -14,12 +14,12 @@ import ignite.metrics
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset import LabelDataset, sentence_collate_batch
-from tests.marks import needs_cuda, needs_cudnn
+from tests.marks import *
 
+BATCH_SIZES = [1, 8]
 VALIDATE_EVERY = 100
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 5
-BATCH_SIZE = 8
 
 
 torch.manual_seed(0)
@@ -37,6 +37,7 @@ def is_monotonically_decreasing(numbers: Sequence[float]) -> bool:
 
 
 def make_data(device, max_index, total):
+    # TODO: Make the data follow some pattern instead of random noise
     num_words = max_index - 1
     size = (total // 2, 32)
 
@@ -61,7 +62,7 @@ def validation_dataset(device, glove_embedding: WordEmbeddings):
     return make_data(device, len(glove_embedding), 1024)
 
 
-@pytest.fixture(scope="module", params=[1, BATCH_SIZE])
+@pytest.fixture(scope="module", params=BATCH_SIZES)
 def dataloaders(request, training_dataset: LabelDataset, validation_dataset: LabelDataset):
     return DataLoaders(
         DataLoader(training_dataset, batch_size=request.param),
@@ -69,27 +70,28 @@ def dataloaders(request, training_dataset: LabelDataset, validation_dataset: Lab
     )
 
 
-def test_training_runs(trainer: Engine, dataloaders: DataLoaders):
-
+@record_runtime
+@pytest.mark.dependency(name="test_training_runs")
+def test_training_runs(request, trainer: Engine, dataloaders: DataLoaders):
     result = trainer.run(dataloaders.training, max_epochs=MAX_EPOCHS)
 
     assert result is not None
 
 
-# @needs_cuda
-# def test_training_cuda_faster_than_cpu(trainer_cpu: Engine, trainer_cuda: Engine, training_loader: DataLoader, training_loader_cuda: DataLoader):
-#     start_cpu = time.time()
-#     result_cpu = trainer_cpu.run(training_loader, max_epochs=MAX_EPOCHS)
-#     duration_cpu = time.time() - start_cpu
+@needs_cuda
+@pytest.mark.dependency(depends=["test_training_runs"])
+@pytest.mark.parametrize("batch_size", BATCH_SIZES)
+def test_training_cuda_faster_than_cpu(batch_size: int):
+    duration_cpu = test_training_runs.duration[f"test_training_runs[cpu-{batch_size}]"]
+    duration_cuda = test_training_runs.duration[f"test_training_runs[cuda-{batch_size}]"]
 
-#     start_cuda = time.time()
-#     result_cuda = trainer_cuda.run(training_loader_cuda, max_epochs=MAX_EPOCHS)
-#     duration_cuda = time.time() - start_cuda
+    assert duration_cuda < duration_cpu
 
-#     assert duration_cuda < duration_cpu
 
 # TODO: Ensure non-blocking CUDA works
 # TODO: Ensure pinned memory works
+
+# TODO: Split the training process off into a fixture
 
 
 def test_training_doesnt_change_word_embeddings(trainer: Engine, dataloaders: DataLoaders, glove_embedding: WordEmbeddings):
@@ -101,7 +103,7 @@ def test_training_doesnt_change_word_embeddings(trainer: Engine, dataloaders: Da
     assert vectors[0].cpu().numpy() == pytest.approx(embeddings[0].cpu().numpy())
 
 
-@pytest.mark.cuda_only  # CUDA only, to save time
+@devices("cuda")  # CUDA only, to save time
 def test_training_improves_metrics(device, trainer: Engine, dataloaders: DataLoaders):
     def tf(y):
         # TODO: Move to general utility function elsewhere
