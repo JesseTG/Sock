@@ -9,7 +9,7 @@ from .marks import *
 torch.manual_seed(0)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def dataset(cresci_genuine_accounts_tweets_tensors: Dataset):
     # TODO: Make an alias of this with pytest idioms
     return cresci_genuine_accounts_tweets_tensors
