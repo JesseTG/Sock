@@ -19,7 +19,7 @@ SLASHES = re.compile("/")
 NUMBERS = re.compile(r"[-+]?[.\d]*[\d]+[:, .\d]*")
 HASHTAGS = re.compile(r"\B#(\S+)")
 REPEATED_PUNCTUATION = re.compile(r"([!?.])\1+")
-OTHER_PUNCTUATION = re.compile(r"([,:;=+.!?])")
+OTHER_PUNCTUATION = re.compile(r"([\",:;=+.!?])")
 ELONGATED_WORDS = re.compile(r"\b(\S*?)(.)\2{2,}\b")
 ALL_CAPS_WORDS = re.compile(r"\b([^a-z0-9()<>'`\s-]{2,})\b")
 
