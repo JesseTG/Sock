@@ -1,3 +1,4 @@
+from numbers import Integral
 from typing import Any, Sequence, Tuple, TypeVar
 
 import torch
@@ -18,10 +19,7 @@ class LabelDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, index: int) -> Tuple[T, U]:
-        if torch.is_tensor(index):
-            index = index.item()
-
+    def __getitem__(self, index: Integral) -> Tuple[T, U]:
         return (self.data[index], self.labels[index])
 
 
@@ -33,8 +31,5 @@ class SingleLabelDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, index: int) -> Tuple[T, Any]:
-        if torch.is_tensor(index):
-            index = index.item()
-
+    def __getitem__(self, index: Integral) -> Tuple[T, Any]:
         return (self.data[index], self.label)
