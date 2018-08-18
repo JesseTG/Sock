@@ -28,7 +28,7 @@ class ContextualLSTM(nn.Module):
         self.dense2 = nn.Linear(self.dense1.out_features, 64)
         self.output = nn.Linear(self.dense2.out_features, 1)
 
-        self.to(device)
+        self.to(device, non_blocking=True)
         # is there a layer that takes the weighted average of two like-shaped tensors? would be useful
         # for mixing the main output and the aux output like the paper describes
         # if not, just mix them myself
