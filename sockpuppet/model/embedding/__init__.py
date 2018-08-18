@@ -63,7 +63,7 @@ class WordEmbeddings:
             return self.vectors[self._get_word(index)]
         elif torch.is_tensor(index) and index.dim() == 0:
             # If this is a one-element tensor...
-            return self.vectors[index.item()]
+            return self.vectors[index]
         else:
             raise TypeError(f"Cannot index with a {type(index).__name__}")
 
