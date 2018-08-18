@@ -41,9 +41,8 @@ def test_lstm_moves_embeddings_to_cuda(lstm: ContextualLSTM):
 def test_lstm_needs_input_from_same_device(lstm: ContextualLSTM):
     with pytest.raises(RuntimeError):
         encoding = [
-            torch.LongTensor([0, 1, 5, 78, 3, 1])
+            torch.LongTensor([0, 1, 5, 78, 3, 1], device="cpu")
         ]
-        assert encoding[0].device.type == "cpu"
 
         lstm(encoding)
 
