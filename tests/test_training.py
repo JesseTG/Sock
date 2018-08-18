@@ -146,6 +146,11 @@ def test_training_improves_metrics(device, trainer: Engine, dataloaders: DataLoa
 
     trainer.run(dataloaders.training, max_epochs=25)
 
+    assert len(trainer.state.loss) > 1
+    assert len(trainer.state.accuracy) > 1
+    assert len(trainer.state.recall) > 1
+    assert len(trainer.state.precision) > 1
+
     assert trainer.state.loss[0] > trainer.state.loss[-1]
     assert trainer.state.accuracy[0] < trainer.state.accuracy[-1]
     assert trainer.state.recall[0] < trainer.state.recall[-1]
