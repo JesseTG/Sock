@@ -128,7 +128,7 @@ def test_unknown_word_encodes_to_index_1(glove_embedding: WordEmbeddings):
     tokens = "<france> <spain> <china> <user>".split()
     encoding = glove_embedding.encode(tokens)
 
-    assert torch.equal(encoding, torch.tensor([1, 1, 1, 2], dtype=torch.long, device=glove_embedding.device))
+    assert torch.equal(encoding, torch.as_tensor([1, 1, 1, 2], dtype=torch.long, device=glove_embedding.device))
 
 
 def test_embed_empty_string_to_zero(glove_embedding: WordEmbeddings):
