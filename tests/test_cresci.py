@@ -2,6 +2,8 @@ import pytest
 import torch
 from sockpuppet.model.dataset.cresci import CresciTweetDataset, CresciUserDataset, CresciTensorTweetDataset
 
+from .marks import *
+
 
 def test_cresci_tweet_row_loaded(cresci_genuine_accounts_tweets: CresciTweetDataset):
     assert cresci_genuine_accounts_tweets[5].text == "Don't. Ok? https://t.co/uTXrJ6zvdN"
@@ -31,6 +33,7 @@ def test_cresci_all_users_loaded(cresci_genuine_accounts_users: CresciUserDatase
     assert len(cresci_genuine_accounts_users) == 3474
 
 
+@devices("cpu", "cuda")
 def test_cresci_tensor_tweet_device_is_correct(device, cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
     assert cresci_genuine_accounts_tweets_tensors.device == torch.device(device)
 
