@@ -268,6 +268,7 @@ def cresci_social_spambots_1_tweets_tensors_dp(cresci_social_spambots_1_tweets_t
 def make_trainer():
     def _make(device, model: Module):
         model.train(True)
+        model.to(device)
         optimizer = torch.optim.SGD(
             model.parameters(),
             lr=0.01
