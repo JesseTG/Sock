@@ -21,14 +21,18 @@ HASHTAGS = re.compile(r"\B#(\S+)")
 REPEATED_PUNCTUATION = re.compile(r"([!?.])\1+")
 OTHER_PUNCTUATION = re.compile(r"([\",:;=+.!?])")
 ELONGATED_WORDS = re.compile(r"\b(\S*?)(.)\2{2,}\b")
+RETWEET = re.compile(r"^RT\b", re.IGNORECASE)
 ALL_CAPS_WORDS = re.compile(r"\b([^a-z0-9()<>'`\s-]{2,})\b")
-
-# TODO: If the input is empty, return a one-token list ["<empty>"]
 
 
 def tokenize(input: str) -> List[str]:
     # TODO: Rewrite with a custom iterator of some kind and benchmark it
     # As it is, this generates a lot of garbage
+
+    if len(input) == 0:
+        return ["<empty>"]
+
+    input = RETWEET.sub("<retweet> ", input)
 
     input = URLS.sub("<url>", input)
     # URLS
