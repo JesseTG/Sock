@@ -1,6 +1,7 @@
 import csv
 import sys
 from typing import Callable, Sequence, Tuple, Union
+from numbers import Integral
 
 import numpy
 import pandas
@@ -88,10 +89,7 @@ class CresciTensorTweetDataset(Dataset):
     def __len__(self) -> int:
         return len(self.tensors)
 
-    def __getitem__(self, index: Union[Tensor, int]) -> Tensor:
-        if torch.is_tensor(index):
-            index = index.item()
-
+    def __getitem__(self, index: Integral) -> Tensor:
         if self.tensors[index] is None:
             text = self.data_source[index].text
             tokens = self.tokenizer(text)
@@ -116,5 +114,5 @@ class CresciUserDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: Integral):
         return self.data.loc[index]
