@@ -79,8 +79,11 @@ class CresciTensorTweetDataset(Dataset):
         self.tokenizer = tokenizer
         self.data_source = data_source
         self.tensors = [None] * len(data_source)
-        self.device = torch.device(device)
         # NOTE: Each tensor might have a different shape, as each tensor represents a tweet
+
+    @property
+    def device(self):
+        return self.embeddings.device
 
     def __len__(self) -> int:
         return len(self.tensors)
@@ -92,8 +95,7 @@ class CresciTensorTweetDataset(Dataset):
         if self.tensors[index] is None:
             text = self.data_source[index].text
             tokens = self.tokenizer(text)
-            tensor = self.embeddings.encode(tokens)
-            self.tensors[index] = tensor.to(self.device)
+            self.tensors[index] = self.embeddings.encode(tokens)
 
         return self.tensors[index]
 
