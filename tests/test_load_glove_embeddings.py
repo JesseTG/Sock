@@ -1,5 +1,6 @@
 import pytest
 import torch
+from pandas import DataFrame
 from torch.nn import Embedding
 from sockpuppet.model.embedding import WordEmbeddings
 
@@ -17,20 +18,20 @@ def embedding_layer(glove_embedding: WordEmbeddings):
     return Embedding.from_pretrained(glove_embedding.vectors)
 
 
-def test_correct_embedding_words_loaded(glove_embedding: WordEmbeddings):
-    assert glove_embedding.words[2] == "<user>"
+def test_correct_embedding_words_loaded(glove_data: DataFrame):
+    assert glove_data[0][2] == "<user>"
 
 
 def test_all_embedding_vectors_loaded(glove_embedding: WordEmbeddings):
     assert len(glove_embedding) == 1193516
 
 
-def test_pad_is_index_0(glove_embedding: WordEmbeddings):
-    assert glove_embedding.words[0] == "<pad>"
+def test_pad_is_index_0(glove_data: DataFrame):
+    assert glove_data[0][0] == "<pad>"
 
 
-def test_unk_is_index_1(glove_embedding: WordEmbeddings):
-    assert glove_embedding.words[1] == "<unk>"
+def test_unk_is_index_1(glove_data: DataFrame):
+    assert glove_data[0][1] == "<unk>"
 
 
 def test_first_word_vector_is_all_zeros(glove_embedding: WordEmbeddings):
@@ -45,8 +46,8 @@ def test_correct_embedding_values_loaded(glove_embedding: WordEmbeddings):
     assert glove_embedding.vectors[2].cpu().numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
 
 
-def test_embedding_length_consistent(glove_embedding: WordEmbeddings):
-    assert len(glove_embedding.vectors) == len(glove_embedding.words)
+def test_embedding_length_consistent(glove_embedding: WordEmbeddings, glove_data: DataFrame):
+    assert len(glove_embedding.vectors) == len(glove_data)
 
 
 def test_get_vector_by_int_index(glove_embedding: WordEmbeddings):

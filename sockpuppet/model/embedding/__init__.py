@@ -31,13 +31,15 @@ class WordEmbeddings:
         else:
             raise TypeError(f"Expected a str or DataFrame, got {path}")
 
+        # self.words = data[0]
+        # No need to keep around the wordlist separately, but if so we can just keep the dataframe
+
         self.dim = dim
-        self.words = data[0].tolist()  # type: list
-        self.vectors = torch.from_numpy(data.iloc[:, 1:dim + 1].values).type(torch.float).to(device)  # type: Tensor
+        self.vectors = torch.as_tensor(data.iloc[:, 1:dim + 1].values, dtype=torch.float, device=device)  # type: Tensor
         self.vectors.requires_grad_(False)
         # [all rows, second column:last column]
 
-        self.indices = {word: index for index, word in enumerate(self.words)}
+        self.indices = {word: index for index, word in enumerate(data[0])}
         # note: must append a <unk> zero vector to embedding file
         # do so with python3 -c 'print("<unk>", *([0.0]*25))' >> the_data_file.txt
 
@@ -45,7 +47,7 @@ class WordEmbeddings:
         return self.indices.get(index, 1)
 
     def __len__(self) -> int:
-        return len(self.words)
+        return len(self.indices)
 
     @property
     def device(self) -> torch.device:
