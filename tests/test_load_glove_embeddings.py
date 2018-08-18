@@ -3,11 +3,11 @@ import torch
 from torch.nn import Embedding
 from sockpuppet.model.embedding import WordEmbeddings
 
-FIRST_ROW_VECTOR = torch.tensor([
+FIRST_ROW_VECTOR = torch.as_tensor([
     0.62415, 0.62476, -0.082335, 0.20101, -0.13741, -0.11431, 0.77909, 2.6356, -0.46351, 0.57465,
     -0.024888, -0.015466, -2.9696, -0.49876, 0.095034, -0.94879, -0.017336, -0.86349, -1.3348, 0.046811,
     0.36999, -0.57663, -0.48469, 0.40078, 0.75345
-])
+], dtype=torch.float)
 
 ZERO_VECTOR = torch.zeros_like(FIRST_ROW_VECTOR)
 

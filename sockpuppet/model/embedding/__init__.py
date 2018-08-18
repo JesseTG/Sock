@@ -68,9 +68,9 @@ class WordEmbeddings:
     def encode(self, tokens: Sequence[str]) -> Tensor:
         if len(tokens) > 0:
             # If this is a non-empty sentence...
-            return torch.tensor([self._get_word(t) for t in tokens], dtype=torch.long, device=self.device)
+            return torch.as_tensor([self._get_word(t) for t in tokens], dtype=torch.long, device=self.device)
         else:
-            return torch.tensor([1], dtype=torch.long, device=self.device)
+            return torch.as_tensor([1], dtype=torch.long, device=self.device)
             # TODO: Dedicate a special token <empty> and an index for it
 
     def to_layer(self) -> Embedding:
@@ -89,7 +89,7 @@ class WordEmbeddings:
             # Else if this is a standard Python sequence...
             if isinstance(encoding[0], int):
                 # ...of word indices...
-                return self.vectors.index_select(0, torch.tensor(encoding, dtype=torch.long, device=self.device))
+                return self.vectors.index_select(0, torch.as_tensor(encoding, dtype=torch.long, device=self.device))
             elif isinstance(encoding[0], str):
                 # ...of words...
                 return self.vectors.index_select(0, self.encode(encoding))

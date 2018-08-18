@@ -58,7 +58,7 @@ class ContextualLSTM(nn.Module):
         self.hidden = self._init_hidden(len(sentences))
 
         sentences = sorted(sentences, key=len, reverse=True)
-        lengths = torch.tensor([len(s) for s in sentences], dtype=torch.long, device=self.device)
+        lengths = torch.as_tensor([len(s) for s in sentences], dtype=torch.long, device=self.device)
 
         padded = pad_sequence(sentences, False, self.embeddings.padding_idx)
         # ^ Size([num_tweets, longest_tweet])

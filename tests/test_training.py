@@ -109,7 +109,7 @@ def test_training_improves_metrics(device, trainer: Engine, dataloaders: DataLoa
         # TODO: Move to general utility function elsewhere
         return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
 
-    mapping = torch.tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
+    mapping = torch.as_tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
 
     def tf_2class(output):
         y_pred, y = output
