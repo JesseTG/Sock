@@ -32,7 +32,12 @@ from sockpuppet.model.dataset.twitter_tokenize import tokenize
     ("Not sad):", "not sad) :"),
     (":L :l :| :/ :\\ :*", "<neutralface> <neutralface> <neutralface> <neutralface> <neutralface> <neutralface>"),
     ("Download to C://Users", "download to c : / / users"),
-    (":P :p index:P :p", "<lolface> <lolface> index : p <lolface>")
+    (":P :p index:P :p", "<lolface> <lolface> index : p <lolface>"),
+    ("I am a walrus :) wanna do this??? lets go... 3 times now YEAAAA #excellent",
+     "i am a walrus <smile> wanna do this ? <repeat> let's go . <repeat> <number> times now yea <allcaps> <elong> <hashtag> excellent"),
+    ("RT @somebody hey How's it going?", "<retweet> <user> hey how's it going ?"),
+    ("", "<empty>"),
+    ('I need to get some "things"', 'i need to get some " things "'),
 ])
 def test_tokenize(input, expected):
     assert tokenize(input) == expected.split()
