@@ -50,6 +50,7 @@ def test_iterate_dataloader_parallel(dataset: Dataset, sampler: Sampler):
     assert len(tensors) > 0
 
 # TODO: Test that loading in parallel is faster than loading in sequence
+# TODO: Test that pinned memory is faster
 
 
 @devices("cpu")
