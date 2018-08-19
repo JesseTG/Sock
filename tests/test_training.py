@@ -14,7 +14,7 @@ from ignite.engine import Events, Engine
 import ignite.metrics
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
-from sockpuppet.model.dataset import LabelDataset, sentence_collate_batch
+from sockpuppet.model.dataset import LabelDataset, sentence_label_collate
 from tests.marks import *
 
 BATCH_SIZES = [1, 8, 32, 64, 128]

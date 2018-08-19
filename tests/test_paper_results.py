@@ -15,7 +15,7 @@ from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
 from sockpuppet.model.dataset.cresci import CresciTensorTweetDataset
-from sockpuppet.model.dataset import sentence_collate, sentence_collate_batch
+from sockpuppet.model.dataset import sentence_collate, sentence_label_collate
 from sockpuppet.utils import split_integers
 from tests.marks import *
 
@@ -64,7 +64,7 @@ def training_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_collate_batch)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_collate)
 
 
 @pytest.fixture(scope="module")
@@ -77,7 +77,7 @@ def validation_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_collate_batch)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_collate)
 
 
 @pytest.fixture(scope="module")
@@ -90,7 +90,7 @@ def testing_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_collate_batch)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_collate)
 
 
 def test_split_ratios_add_to_1():
