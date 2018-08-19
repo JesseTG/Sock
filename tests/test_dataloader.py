@@ -40,7 +40,7 @@ def test_iterate_dataloader_one_thread(dataset: Dataset, sampler: Sampler, num_w
 @pytest.mark.parametrize("pin_memory", [False, True], ids=["unpinned", "pinned"])
 @pytest.mark.parametrize("num_workers", [0, 1, 2, 4], ids=lambda x: f"{x}t")
 @pytest.mark.parametrize("batch_size", [1, 8, 64, 256], ids=lambda x: f"{x}b")
-@pytest.mark.benchmark(group="dataloader_iteration")
+@pytest.mark.benchmark(group="dataloader_iteration", warmup=True)
 def test_bench_dataloader_iteration(benchmark, dataset: Dataset, sampler: Sampler, pin_memory: bool, num_workers: int, batch_size: int):
     def iterate():
         loader = DataLoader(
