@@ -119,31 +119,22 @@ def dataloaders(request, training_dataset: LabelDataset, validation_dataset: Lab
 
 
 @modes("cpu", "cuda")
+@pytest.mark.benchmark(group="make_data")
 def test_bench_make_data(benchmark, device: torch.device, glove_data: DataFrame):
     result = benchmark(make_data, device, len(glove_data), 1024)
-
-
-@record_runtime
-@pytest.mark.dependency(name="test_training_runs")
-def test_training_runs(request, trainer: Engine, dataloaders: DataLoaders):
-    result = trainer.run(dataloaders.training, max_epochs=MAX_EPOCHS)
 
     assert result is not None
 
 
-@needs_cuda
-@pytest.mark.dependency(depends=["test_training_runs"])
-@pytest.mark.parametrize("batch_size", BATCH_SIZES)
-def test_training_cuda_faster_than_cpu(batch_size: int):
-    duration_cpu = test_training_runs.duration[f"test_training_runs[cpu-{batch_size}]"]
-    duration_cuda = test_training_runs.duration[f"test_training_runs[cuda-{batch_size}]"]
+@pytest.mark.benchmark(group="training")
+def test_bench_training(benchmark, trainer: Engine, dataloaders: DataLoaders):
+    result = benchmark(trainer.run, dataloaders.training, max_epochs=MAX_EPOCHS)
 
-    assert duration_cuda < duration_cpu
+    assert result is not None
 
 
 # TODO: Ensure non-blocking CUDA works
 # TODO: Ensure pinned memory works
-
 # TODO: Split the training process off into a fixture
 
 

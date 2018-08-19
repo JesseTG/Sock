@@ -20,37 +20,40 @@ def sampler(cresci_genuine_accounts_tweets: Dataset):
     return SubsetRandomSampler(numpy.arange(len(cresci_genuine_accounts_tweets) // 10000))
 
 
+@pytest.mark.parametrize("num_workers", [0, 1, 4])
 @modes("cpu", "cuda")
-def test_create_dataloader(dataset: Dataset, sampler: Sampler):
-    loader = DataLoader(dataset=dataset, sampler=sampler)
+def test_create_dataloader(dataset: Dataset, sampler: Sampler, num_workers: int):
+    loader = DataLoader(dataset=dataset, sampler=sampler, num_workers=num_workers)
     assert loader is not None
 
 
 @modes("cpu", "cuda")
-def test_create_parallel_dataloader(dataset: Dataset, sampler: Sampler):
-    loader = DataLoader(dataset=dataset, sampler=sampler, num_workers=4)
-    assert loader is not None
-
-
-@modes("cpu", "cuda")
-def test_iterate_dataloader_one_thread(dataset: Dataset, sampler: Sampler):
-    loader = DataLoader(dataset=dataset, sampler=sampler)
+@pytest.mark.parametrize("num_workers", [0, 1])
+def test_iterate_dataloader_one_thread(dataset: Dataset, sampler: Sampler, num_workers: int):
+    loader = DataLoader(dataset=dataset, sampler=sampler, num_workers=num_workers)
     tensors = [t for t in loader]
 
     assert len(tensors) > 0
-
-# TODO: Chokes on SeaWulf
 
 
 @modes("cpu")
-def test_iterate_dataloader_parallel(dataset: Dataset, sampler: Sampler):
-    loader = DataLoader(dataset=dataset, sampler=sampler, num_workers=2)
-    tensors = [t for t in loader]
+@pytest.mark.parametrize("pin_memory", [False, True], ids=["unpinned", "pinned"])
+@pytest.mark.parametrize("num_workers", [0, 1, 2, 4], ids=lambda x: f"{x}t")
+@pytest.mark.parametrize("batch_size", [1, 8, 64, 256], ids=lambda x: f"{x}b")
+@pytest.mark.benchmark(group="dataloader_iteration")
+def test_bench_dataloader_iteration(benchmark, dataset: Dataset, sampler: Sampler, pin_memory: bool, num_workers: int, batch_size: int):
+    def iterate():
+        loader = DataLoader(
+            dataset=dataset,
+            sampler=sampler,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            batch_size=batch_size
+        )
 
-    assert len(tensors) > 0
+        tensors = [t for t in loader]
 
-# TODO: Test that loading in parallel is faster than loading in sequence
-# TODO: Test that pinned memory is faster
+    result = benchmark(iterate)
 
 
 @modes("cpu")
