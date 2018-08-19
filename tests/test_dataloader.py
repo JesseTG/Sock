@@ -17,7 +17,7 @@ def dataset(cresci_genuine_accounts_tweets_tensors: Dataset):
 
 @pytest.fixture(scope="module")
 def sampler(cresci_genuine_accounts_tweets: Dataset):
-    return SubsetRandomSampler(numpy.arange(len(cresci_genuine_accounts_tweets) // 10000))
+    return SubsetRandomSampler(range(512))
 
 
 @pytest.mark.parametrize("num_workers", [0, 1, 4])
