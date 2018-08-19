@@ -153,12 +153,11 @@ def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation
 
     @trainer.on(Events.EPOCH_COMPLETED)
     def validate(trainer: Engine):
-        if trainer.state.epoch % VALIDATE_EVERY == 0:
-            validator.run(validation_data)
-            trainer.state.loss.append(validator.state.metrics["loss"])
-            trainer.state.accuracy.append(validator.state.metrics["accuracy"])
-            trainer.state.recall.append(validator.state.metrics["recall"])
-            trainer.state.precision.append(validator.state.metrics["precision"])
+        validator.run(validation_data)
+        trainer.state.loss.append(validator.state.metrics["loss"])
+        trainer.state.accuracy.append(validator.state.metrics["accuracy"])
+        trainer.state.recall.append(validator.state.metrics["recall"])
+        trainer.state.precision.append(validator.state.metrics["precision"])
 
     def score_function(trainer: Engine) -> float:
         return -trainer.state.metrics["loss"]
