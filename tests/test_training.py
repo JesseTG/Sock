@@ -17,7 +17,7 @@ from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset import LabelDataset, sentence_label_collate
 from tests.marks import *
 
-BATCH_SIZES = [1, 8, 32, 64, 128]
+BATCH_SIZES = [1, 8, 32, 64, pytest.param(128, marks=slow)]
 VALIDATE_EVERY = 100
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 5

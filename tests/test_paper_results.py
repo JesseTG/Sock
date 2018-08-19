@@ -119,6 +119,7 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 
 
 @modes("cuda", "dp")
+@slow
 def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation_data: DataLoader, testing_data: DataLoader):
     def tf(y):
         # TODO: Move to general utility function elsewhere

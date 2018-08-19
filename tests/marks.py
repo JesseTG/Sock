@@ -11,3 +11,4 @@ cpu_only = modes("cpu")
 cuda_only = modes("cuda")
 dp_only = modes("dp")
 record_runtime = pytest.mark.record_runtime
+slow = pytest.mark.slow
