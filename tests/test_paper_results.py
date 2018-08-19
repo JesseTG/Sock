@@ -19,17 +19,16 @@ from sockpuppet.model.dataset import sentence_collate, sentence_collate_batch
 from sockpuppet.utils import split_integers
 from tests.marks import *
 
-VALIDATE_EVERY = 2
 CHECKPOINT_EVERY = 100
-MAX_EPOCHS = 10
-BATCH_SIZE = 8
+MAX_EPOCHS = 5
+BATCH_SIZE = 128
 
 NOT_BOT = 0
 BOT = 1
 TRAINING_SPLIT = 0.4
 VALIDATION_SPLIT = 0.1
 TESTING_SPLIT = 0.5
-TRAINER_PATIENCE = 10
+TRAINER_PATIENCE = 100
 
 
 Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
