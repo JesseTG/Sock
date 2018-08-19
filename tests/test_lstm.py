@@ -5,6 +5,7 @@ from sockpuppet.model.embedding import WordEmbeddings
 from tests.marks import *
 
 
+@devices("cpu", "cuda")
 def test_devices_are_the_same(lstm: ContextualLSTM, glove_embedding: WordEmbeddings):
     assert lstm.device == glove_embedding.device
 
