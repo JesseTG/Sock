@@ -53,4 +53,6 @@ from sockpuppet.model.dataset.twitter_tokenize import tokenize
     ("I will never watch RT again.", "i will never watch rt <allcaps> again ."),
 ])
 def test_tokenize(input, expected):
-    assert tokenize(input) == expected.split()
+    actual = tokenize(input)
+    expected = expected.split()
+    assert actual == expected
