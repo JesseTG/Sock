@@ -67,6 +67,9 @@ class ContextualLSTM(nn.Module):
         # ^ Size([num_tweets, longest_tweet, self.word_embeddings.dim])
 
         packed = pack_padded_sequence(embedding, lengths, False)
+        self.lstm.flatten_parameters()
+        # NOTE: Don't know what this does, need to ask around
+
         out, (hn, cn) = self.lstm(packed, self.hidden)
         # ^ Size([num_tweets, num_tokens, num_dims]) -> Size([???])
         # TODO: Figure out exactly what the dimensions are
