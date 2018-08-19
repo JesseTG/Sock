@@ -5,6 +5,7 @@ import time
 import pytest
 import torch
 import ignite
+from pandas import DataFrame
 
 from torch import Tensor, LongTensor
 from torch.utils.data import DataLoader, Dataset, TensorDataset
@@ -25,6 +26,7 @@ MAX_EPOCHS = 5
 torch.manual_seed(0)
 
 DataLoaders = namedtuple("DataLoaders", ["training", "validation"])
+TensorPair = namedtuple("TensorPair", ["data", "labels"])
 
 
 def is_monotonically_decreasing(numbers: Sequence[float]) -> bool:
@@ -49,17 +51,70 @@ def make_data(device, max_index, total):
     labels1 = torch.ones([len(tensor1)], dtype=torch.float, device=device)
     # Ones have higher-numbered word indices
 
-    return LabelDataset(torch.cat([tensor0, tensor1]), torch.cat([labels0, labels1]))
+    return TensorPair(torch.cat([tensor0, tensor1]), torch.cat([labels0, labels1]))
+
+###############################################################################
 
 
 @pytest.fixture(scope="module")
-def training_dataset(device, glove_embedding: WordEmbeddings):
-    return make_data(device, len(glove_embedding), 256)
+def training_tensors(request, device):
+    return request.getfixturevalue(f"training_tensors_{device}")
 
 
 @pytest.fixture(scope="module")
-def validation_dataset(device, glove_embedding: WordEmbeddings):
-    return make_data(device, len(glove_embedding), 1024)
+def training_tensors_cpu(glove_data: DataFrame):
+    return make_data("cpu", len(glove_data), 256)
+
+
+@pytest.fixture(scope="module")
+def training_tensors_cuda(training_tensors_cpu: TensorPair):
+    return (
+        training_tensors_cpu[0].to("cuda", non_blocking=True),
+        training_tensors_cpu[1].to("cuda", non_blocking=True),
+    )
+
+
+@pytest.fixture(scope="module")
+def training_tensors_dp(training_tensors_cuda: TensorPair):
+    return training_tensors_cuda
+
+###############################################################################
+
+
+###############################################################################
+@pytest.fixture(scope="module")
+def validation_tensors(request, device):
+    return request.getfixturevalue(f"validation_tensors_{device}")
+
+
+@pytest.fixture(scope="module")
+def validation_tensors_cpu(glove_data: DataFrame):
+    return make_data("cpu", len(glove_data), 1024)
+
+
+@pytest.fixture(scope="module")
+def validation_tensors_cuda(validation_tensors_cpu: TensorPair):
+    return (
+        validation_tensors_cpu[0].to("cuda", non_blocking=True),
+        validation_tensors_cpu[1].to("cuda", non_blocking=True),
+    )
+
+
+@pytest.fixture(scope="module")
+def validation_tensors_dp(validation_tensors_cuda: TensorPair):
+    return validation_tensors_cuda
+
+###############################################################################
+
+
+@pytest.fixture(scope="module")
+def training_dataset(training_tensors: TensorPair):
+    return LabelDataset(*training_tensors)
+
+
+@pytest.fixture(scope="module")
+def validation_dataset(validation_tensors: TensorPair):
+    return LabelDataset(*validation_tensors)
 
 
 @pytest.fixture(scope="module", params=BATCH_SIZES)
