@@ -40,10 +40,10 @@ def tokenize(input: str) -> List[str]:
     input = MENTIONS.sub("<user>", input)
     # User mentions
 
-    input = SMILE.sub("<smile> ", input)
-    input = LOLFACE.sub("<lolface> ", input)
-    input = SADFACE.sub("<sadface> ", input)
-    input = NEUTRALFACE.sub("<neutralface> ", input)
+    input = SMILE.sub(" <smile> ", input)
+    input = LOLFACE.sub(" <lolface> ", input)
+    input = SADFACE.sub(" <sadface> ", input)
+    input = NEUTRALFACE.sub(" <neutralface> ", input)
     # Common old-style emoticons
 
     input = HEARTS.sub(" <heart> ", input)
@@ -52,7 +52,7 @@ def tokenize(input: str) -> List[str]:
     input = SLASHES.sub(" / ", input)
     # Force splitting words appended with slashes (once we tokenized the URLs, of course)
 
-    input = NUMBERS.sub("<number>", input)
+    input = NUMBERS.sub("<number> ", input)
     # Numbers
 
     input = HASHTAGS.sub(r"<hashtag> \1 ", input)
