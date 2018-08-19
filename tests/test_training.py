@@ -38,7 +38,7 @@ def is_monotonically_decreasing(numbers: Sequence[float]) -> bool:
     return True
 
 
-def make_data(device, max_index, total):
+def make_data(device: torch.device, max_index: int, total: int):
     # TODO: Make the data follow some pattern instead of random noise
     num_words = max_index - 1
     size = (total // 2, 32)
@@ -53,12 +53,13 @@ def make_data(device, max_index, total):
 
     return TensorPair(torch.cat([tensor0, tensor1]), torch.cat([labels0, labels1]))
 
-###############################################################################
 
+###############################################################################
+# training_tensors ############################################################
 
 @pytest.fixture(scope="module")
-def training_tensors(request, device):
-    return request.getfixturevalue(f"training_tensors_{device}")
+def training_tensors(request, device: torch.device):
+    return request.getfixturevalue(f"training_tensors_{device.type}")
 
 
 @pytest.fixture(scope="module")
@@ -73,18 +74,15 @@ def training_tensors_cuda(training_tensors_cpu: TensorPair):
         training_tensors_cpu[1].to("cuda", non_blocking=True),
     )
 
-
-@pytest.fixture(scope="module")
-def training_tensors_dp(training_tensors_cuda: TensorPair):
-    return training_tensors_cuda
-
 ###############################################################################
 
 
 ###############################################################################
+# validation_tensors ##########################################################
+
 @pytest.fixture(scope="module")
-def validation_tensors(request, device):
-    return request.getfixturevalue(f"validation_tensors_{device}")
+def validation_tensors(request, device: torch.device):
+    return request.getfixturevalue(f"validation_tensors_{device.type}")
 
 
 @pytest.fixture(scope="module")
@@ -98,11 +96,6 @@ def validation_tensors_cuda(validation_tensors_cpu: TensorPair):
         validation_tensors_cpu[0].to("cuda", non_blocking=True),
         validation_tensors_cpu[1].to("cuda", non_blocking=True),
     )
-
-
-@pytest.fixture(scope="module")
-def validation_tensors_dp(validation_tensors_cuda: TensorPair):
-    return validation_tensors_cuda
 
 ###############################################################################
 
@@ -123,6 +116,11 @@ def dataloaders(request, training_dataset: LabelDataset, validation_dataset: Lab
         DataLoader(training_dataset, batch_size=request.param),
         DataLoader(validation_dataset, batch_size=request.param),
     )
+
+
+@modes("cpu", "cuda")
+def test_bench_make_data(benchmark, device: torch.device, glove_data: DataFrame):
+    result = benchmark(make_data, device, len(glove_data), 1024)
 
 
 @record_runtime
@@ -158,8 +156,8 @@ def test_training_doesnt_change_word_embeddings(trainer: Engine, dataloaders: Da
     assert vectors[0].cpu().numpy() == pytest.approx(embeddings[0].cpu().numpy())
 
 
-@devices("cuda")  # CUDA only, to save time
-def test_training_improves_metrics(device, trainer: Engine, dataloaders: DataLoaders):
+@modes("cuda", "dp")  # CUDA only, to save time
+def test_training_improves_metrics(device: torch.device, trainer: Engine, dataloaders: DataLoaders):
     def tf(y):
         # TODO: Move to general utility function elsewhere
         return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))

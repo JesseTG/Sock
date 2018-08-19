@@ -33,22 +33,26 @@ def test_cresci_all_users_loaded(cresci_genuine_accounts_users: CresciUserDatase
     assert len(cresci_genuine_accounts_users) == 3474
 
 
-@devices("cpu", "cuda")
-def test_cresci_tensor_tweet_device_is_correct(device, cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
-    assert cresci_genuine_accounts_tweets_tensors.device.type == device
+@modes("cpu", "cuda")
+def test_cresci_tensor_tweet_device_is_correct(device: torch.device, cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
+    assert cresci_genuine_accounts_tweets_tensors.device == device
 
 
+@modes("cpu", "cuda")
 def test_cresci_tensor_tweet_dataset_is_created(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
     assert cresci_genuine_accounts_tweets_tensors is not None
 
 
+@modes("cpu", "cuda")
 def test_cresci_tensor_tweet_dataset_loads_tensors(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
     assert torch.is_tensor(cresci_genuine_accounts_tweets_tensors[0])
 
 
+@modes("cpu", "cuda")
 def test_cresci_tensor_tweet_encodes_all_words(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
     assert len(cresci_genuine_accounts_tweets_tensors[0]) == 24
 
 
+@modes("cpu", "cuda")
 def test_cresci_tensor_tweet_dataset_returns_word_indices(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
     assert cresci_genuine_accounts_tweets_tensors[0].dtype == torch.long

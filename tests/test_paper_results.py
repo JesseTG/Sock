@@ -98,7 +98,7 @@ def test_split_ratios_add_to_1():
     assert TRAINING_SPLIT + VALIDATION_SPLIT + TESTING_SPLIT == 1.0
 
 
-@devices("cuda")
+@modes("cuda")
 def test_cresci_genuine_accounts_split_add_up(cresci_genuine_accounts_split: Splits):
     total = len(cresci_genuine_accounts_split.full)
     training_split = len(cresci_genuine_accounts_split.training)
@@ -108,7 +108,7 @@ def test_cresci_genuine_accounts_split_add_up(cresci_genuine_accounts_split: Spl
     assert training_split + validation_split + testing_split == total
 
 
-@devices("cuda")
+@modes("cuda")
 def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: Splits):
     total = len(cresci_social_spambots_1_split.full)
     training_split = len(cresci_social_spambots_1_split.training)
@@ -118,9 +118,7 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
     assert training_split + validation_split + testing_split == total
 
 
-@needs_cuda
-@needs_cudnn
-@devices("cuda", "dp")
+@modes("cuda", "dp")
 def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation_data: DataLoader, testing_data: DataLoader):
     def tf(y):
         # TODO: Move to general utility function elsewhere

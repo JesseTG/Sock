@@ -20,19 +20,19 @@ def sampler(cresci_genuine_accounts_tweets: Dataset):
     return SubsetRandomSampler(numpy.arange(len(cresci_genuine_accounts_tweets) // 10000))
 
 
-@devices("cpu", "cuda")
+@modes("cpu", "cuda")
 def test_create_dataloader(dataset: Dataset, sampler: Sampler):
     loader = DataLoader(dataset=dataset, sampler=sampler)
     assert loader is not None
 
 
-@devices("cpu", "cuda")
+@modes("cpu", "cuda")
 def test_create_parallel_dataloader(dataset: Dataset, sampler: Sampler):
     loader = DataLoader(dataset=dataset, sampler=sampler, num_workers=4)
     assert loader is not None
 
 
-@devices("cpu", "cuda")
+@modes("cpu", "cuda")
 def test_iterate_dataloader_one_thread(dataset: Dataset, sampler: Sampler):
     loader = DataLoader(dataset=dataset, sampler=sampler)
     tensors = [t for t in loader]
@@ -42,7 +42,7 @@ def test_iterate_dataloader_one_thread(dataset: Dataset, sampler: Sampler):
 # TODO: Chokes on SeaWulf
 
 
-@devices("cpu")
+@modes("cpu")
 def test_iterate_dataloader_parallel(dataset: Dataset, sampler: Sampler):
     loader = DataLoader(dataset=dataset, sampler=sampler, num_workers=2)
     tensors = [t for t in loader]
@@ -53,7 +53,7 @@ def test_iterate_dataloader_parallel(dataset: Dataset, sampler: Sampler):
 # TODO: Test that pinned memory is faster
 
 
-@devices("cpu")
+@modes("cpu")
 def test_dataloader_pin(dataset: Dataset, sampler: Sampler):
     loader = DataLoader(dataset=dataset, sampler=sampler, pin_memory=True)
     tensors = [t for t in loader]
@@ -63,7 +63,7 @@ def test_dataloader_pin(dataset: Dataset, sampler: Sampler):
     assert tensors[0].is_pinned()
 
 
-@devices("cpu", "cuda")
+@modes("cpu", "cuda")
 def test_dataloader_batch(dataset: Dataset, sampler: Sampler):
     loader = DataLoader(dataset=dataset, sampler=sampler, collate_fn=sentence_collate, batch_size=8)
     tensors = [t for t in loader]
