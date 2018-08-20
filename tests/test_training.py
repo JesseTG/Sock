@@ -21,7 +21,7 @@ BATCH_SIZES = [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000]
 VALIDATE_EVERY = 100
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 5
-
+NUM_GPUS = torch.cuda.device_count()
 
 torch.manual_seed(0)
 
