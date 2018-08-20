@@ -30,9 +30,14 @@ def test_lstm_moves_all_data_to_cuda(lstm: ContextualLSTM):
         assert p.is_cuda
 
 
-@modes("cuda", "dp")
-def test_lstm_moves_embeddings_to_cuda(lstm: ContextualLSTM):
-    assert lstm.embeddings.weight.is_cuda
+@modes("cuda")
+def test_lstm_moves_embeddings_to_cuda(lstm_cuda: ContextualLSTM):
+    assert lstm_cuda.embeddings.weight.is_cuda
+
+
+@modes("dp")
+def test_lstm_moves_embeddings_to_cuda_in_dp_mode(lstm_dp):
+    assert lstm_dp.module.embeddings.weight.is_cuda
 
 
 @modes("cuda", "dp")
