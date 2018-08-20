@@ -132,10 +132,19 @@ def test_bench_make_data(benchmark, device: torch.device, glove_data: DataFrame)
     assert result is not None
 
 
-@slow
+@modes("cuda")
 @pytest.mark.benchmark(group="training")
-def test_bench_training(benchmark, trainer: Engine, dataloaders: DataLoaders):
+def test_bench_training_cuda(benchmark, trainer: Engine, dataloaders: DataLoaders):
     result = benchmark(trainer.run, dataloaders.training, max_epochs=MAX_EPOCHS)
+
+    assert result is not None
+
+
+@modes("dp")
+@pytest.mark.benchmark(group="training")
+@pytest.mark.parametrize("batch_size", [b * NUM_GPUS for b in BATCH_SIZES])
+def test_bench_training_dp(benchmark, trainer: Engine, training_dataset: LabelDataset, batch_size: int):
+    result = benchmark(trainer.run, training_dataset, max_epochs=MAX_EPOCHS)
 
     assert result is not None
 
