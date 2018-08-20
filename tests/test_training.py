@@ -155,6 +155,7 @@ def test_training_doesnt_change_word_embeddings(trainer: Engine, dataloaders: Da
 
 
 @modes("cuda", "dp")  # CUDA only, to save time
+@slow
 def test_training_improves_metrics(device: torch.device, trainer: Engine, dataloaders: DataLoaders):
     def tf(y):
         # TODO: Move to general utility function elsewhere
