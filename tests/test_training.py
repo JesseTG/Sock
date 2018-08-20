@@ -26,6 +26,7 @@ MAX_EPOCHS = 5
 torch.manual_seed(0)
 
 DataLoaders = namedtuple("DataLoaders", ["training", "validation"])
+Datasets = namedtuple("Datasets", ["training", "validation"])
 TensorPair = namedtuple("TensorPair", ["data", "labels"])
 
 
@@ -110,11 +111,16 @@ def validation_dataset(validation_tensors: TensorPair):
     return LabelDataset(*validation_tensors)
 
 
+@pytest.fixture(scope="module")
+def datasets(training_dataset: LabelDataset, validation_dataset: LabelDataset):
+    return Datasets(training_dataset, validation_dataset)
+
+
 @pytest.fixture(scope="module", params=BATCH_SIZES)
-def dataloaders(request, training_dataset: LabelDataset, validation_dataset: LabelDataset):
+def dataloaders(request, datasets: Datasets):
     return DataLoaders(
-        DataLoader(training_dataset, batch_size=request.param),
-        DataLoader(validation_dataset, batch_size=request.param),
+        DataLoader(datasets.training, batch_size=request.param),
+        DataLoader(datasets.validation, batch_size=request.param),
     )
 
 
