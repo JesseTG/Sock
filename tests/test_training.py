@@ -145,9 +145,10 @@ def test_bench_training(benchmark, trainer: Engine, dataloaders: DataLoaders):
 # TODO: Split the training process off into a fixture
 
 
-def test_training_doesnt_change_word_embeddings(trainer: Engine, dataloaders: DataLoaders, glove_embedding: WordEmbeddings):
+def test_training_doesnt_change_word_embeddings(trainer: Engine, training_dataset: Dataset, glove_embedding: WordEmbeddings):
+    training = DataLoader(training_dataset, batch_size=32)
     embeddings = torch.tensor(glove_embedding.vectors)
-    result = trainer.run(dataloaders.training, max_epochs=MAX_EPOCHS)
+    result = trainer.run(training, max_epochs=MAX_EPOCHS)
 
     vectors = trainer.state.model.word_embeddings.vectors
     assert vectors.data_ptr() != embeddings.data_ptr()
