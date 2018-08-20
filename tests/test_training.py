@@ -126,6 +126,7 @@ def test_bench_make_data(benchmark, device: torch.device, glove_data: DataFrame)
     assert result is not None
 
 
+@slow
 @pytest.mark.benchmark(group="training")
 def test_bench_training(benchmark, trainer: Engine, dataloaders: DataLoaders):
     result = benchmark(trainer.run, dataloaders.training, max_epochs=MAX_EPOCHS)
