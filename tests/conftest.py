@@ -111,9 +111,9 @@ def user(db):
 
 
 @pytest.fixture(scope="session", params=[
-    "cpu",
-    pytest.param("cuda", marks=[needs_cuda, needs_cudnn]),
-    pytest.param("dp", marks=[needs_cuda, needs_cudnn, needs_multiple_gpus])
+    pytest.param("cpu", marks=[cpu]),
+    pytest.param("cuda", marks=[cuda, needs_cuda, needs_cudnn]),
+    pytest.param("dp", marks=[dp, needs_cuda, needs_cudnn, needs_multiple_gpus])
 ])
 def mode(request):
     '''
