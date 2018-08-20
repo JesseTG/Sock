@@ -42,9 +42,11 @@ def pytest_collection_modifyitems(session, config, items: Sequence[Item]):
         modes = item.get_closest_marker("modes")
         if modes is not None:
             # If we're explicitly using a subset of modes...
-            if "mode" in item.callspec.params and item.callspec.params["mode"] not in modes.args:
-                # If this mode isn't in the list...
-                to_remove.add(item)
+            if hasattr(item, "callspec") and hasattr(item.callspec, "params"):
+                params = item.callspec.params
+                if "mode" in params and params["mode"] not in modes.args:
+                    # If this mode isn't in the list...
+                    to_remove.add(item)
 
     for i in to_remove:
         items.remove(i)
