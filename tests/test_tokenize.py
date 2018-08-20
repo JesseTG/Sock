@@ -47,6 +47,7 @@ from sockpuppet.model.dataset.twitter_tokenize import tokenize
     ('I need to get some "things"', 'i need to get some " things "'),
     ("My IP is 192.168.1.1, can you help me", "my ip <allcaps> is <number> , can you help me"),
     ("Today I made 100,000 dollars", "today i made <number> dollars"),
+    ("That'll run you about $10", "that'll run you about $ <number>"),
     ("I have 1,000, what about you?", "i have <number> , what about you ?"),
     ("You need 6000, hope that helps.", "you need <number> , hope that helps ."),
     ("I am so l33t", "i am so l33t"),
