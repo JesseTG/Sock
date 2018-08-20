@@ -1,6 +1,8 @@
 import pytest
 import torch
 from sockpuppet.model.dataset.cresci import CresciTweetDataset, CresciUserDataset, CresciTensorTweetDataset
+from sockpuppet.model.dataset.twitter_tokenize import tokenize
+from sockpuppet.model.embedding import WordEmbeddings
 
 from .marks import *
 
@@ -36,6 +38,32 @@ def test_cresci_all_users_loaded(cresci_genuine_accounts_users: CresciUserDatase
 @modes("cpu", "cuda")
 def test_cresci_tensor_tweet_device_is_correct(device: torch.device, cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
     assert cresci_genuine_accounts_tweets_tensors.device == device
+
+
+@modes("cpu", "cuda")
+@pytest.mark.benchmark(group="cresci_tensor_tweet_cached_access", warmup=True)
+def test_bench_cresci_tensor_tweet_cached_access(benchmark, cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
+    result = benchmark(cresci_genuine_accounts_tweets_tensors.__getitem__, 0)
+    assert result is not None
+
+
+@modes("cpu", "cuda")
+@pytest.mark.benchmark(group="cresci_tensor_tweet_fresh_access")
+def test_bench_cresci_tensor_tweet_fresh_access(benchmark, cresci_genuine_accounts_tweets: CresciTweetDataset, glove_embedding: WordEmbeddings, device: torch.device):
+    # TODO: Make this benchmark run a different set of indices for each iteration
+    dataset = CresciTensorTweetDataset(
+        data_source=cresci_genuine_accounts_tweets,
+        embeddings=glove_embedding,
+        tokenizer=tokenize,
+        device=device
+    )
+
+    def access():
+        return [dataset[i] for i in range(1000)]
+
+    result = benchmark.pedantic(access)
+
+    assert result is not None
 
 
 @modes("cpu", "cuda")
