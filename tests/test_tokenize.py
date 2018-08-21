@@ -58,6 +58,7 @@ from sockpuppet.model.dataset.twitter_tokenize import tokenize
     ("\n", "<empty>"),
     ("\n\n", "<empty>"),
     ("Two line breaks at the end\n\n", "two line breaks at the end"),
+    ("Send an email to test@example.com", "send an email to test@example.com")
 ])
 def test_tokenize(input, expected):
     actual = tokenize(input)
