@@ -180,7 +180,6 @@ def test_training_improves_metrics(device: torch.device, trainer: Engine, datalo
 
         y_pred = mapping.index_select(0, y_pred.round().to(torch.long))
 
-        # TODO: Recall metric isn't meant to be used for a binary class, so expand 0 to [1, 0] and 1 to [0, 1]
         return (y_pred, y.to(torch.long))
 
     validator = ignite.engine.create_supervised_evaluator(
