@@ -10,6 +10,7 @@ TWITTER_DIR="$HOME/scratch/twitter"
 TOKENIZED_DIR="$TWITTER_DIR/tokenized"
 
 mkdir -p "$TOKENIZED_DIR"
+cd "$TWITTER_DIR"
 
 function tokenize() {
     ARCHIVE="$1"
