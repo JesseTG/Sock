@@ -19,11 +19,12 @@ SLASHES = re.compile("/")
 NUMBERS = re.compile(r"\.?\b[-+:,.\d]*\d\b")
 HASHTAGS = re.compile(r"\B#(\S+)")
 REPEATED_PUNCTUATION = re.compile(r"([!?.])\1+")
-OTHER_PUNCTUATION = re.compile(r"([\",:;=+.!?()~])")
+OTHER_PUNCTUATION = re.compile(r"([\",:;=+.!?()~$])")
 ELONGATED_WORDS = re.compile(r"\b(\S*?)(.)\2{2,}\b")
 RETWEET = re.compile(r"^RT\b")
 DOUBLE_QUOTES = re.compile(r"[❝❞🙶🙷“”‟]")
 SINGLE_QUOTES = re.compile(r"[❛❜‘’‛❛❜]")
+NEWLINE = re.compile(r"\n(?!$)")
 ALL_CAPS_WORDS = re.compile(r"\b([^a-z0-9()<>'`\s-]{2,})\b")
 
 
@@ -34,8 +35,9 @@ def tokenize(input: str) -> List[str]:
     if len(input) == 0:
         return ["<empty>"]
 
-    input = input.replace("\n", " <newline> ")
-    # Replace newlines in tweets with <newline>
+    input = NEWLINE.sub(" <newline> ", input)
+    # Replace newlines in tweets with <newline>, except for the one at the end
+    # (to simplify some handling)
 
     input = RETWEET.sub("<retweet> ", input)
 

@@ -52,6 +52,8 @@ from sockpuppet.model.dataset.twitter_tokenize import tokenize
     ("You need 6000, hope that helps.", "you need <number> , hope that helps ."),
     ("I am so l33t", "i am so l33t"),
     ("I will never watch RT again.", "i will never watch rt <allcaps> again ."),
+    ("This is\nthe end", "this is <newline> the end"),
+    ("The last\nline\n", "the last <newline> line"),
 ])
 def test_tokenize(input, expected):
     actual = tokenize(input)
