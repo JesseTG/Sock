@@ -122,6 +122,7 @@ def dataloaders(request, datasets: Datasets):
         DataLoader(datasets.training, batch_size=request.param),
         DataLoader(datasets.validation, batch_size=request.param),
     )
+    # The default collate_fn is sufficient; this isn't supposed to be real data
 
 
 @modes("cpu", "cuda")
