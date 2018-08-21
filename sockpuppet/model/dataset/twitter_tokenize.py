@@ -83,7 +83,7 @@ def tokenize(input: str) -> List[str]:
     input = ALL_CAPS_WORDS.sub(r"\1 <allcaps> ", input)
     # Mark all-caps words
 
-    input = input.lower().split()
+    input = input.casefold().split()
 
     if len(input) == 0:
         return ["<empty>"]
