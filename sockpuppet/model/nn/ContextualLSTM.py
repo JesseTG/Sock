@@ -97,6 +97,6 @@ class ContextualLSTM(nn.Module):
         a = functional.relu(self.dense1(hn))  # Size([???]) -> Size([???])
         b = functional.relu(self.dense2(a))  # Size([???]) -> Size([???])
         c = torch.sigmoid(self.output(b))  # Size([???]) -> Size([num_tweets, 1])
-        return c.view(len(sentences))
+        return c.view(len(lengths))
         # TODO: Consider using BCEWithLogitsLoss
         # TODO: What optimizer did the paper use?  What loss function?
