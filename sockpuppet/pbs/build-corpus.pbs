@@ -3,15 +3,34 @@
 #PBS -l nodes=1:ppn=28,walltime=168:00:00
 #PBS -q extended
 
-# each document is a user and their twitter history
+module load anaconda/.anaconda
 
-# for each 7zip archive:
-#  for each tweet:
-#    pipe it to a file based on the user id
-#
-# for each user:
-#   sort tweets by tweet id (as they are ascending, so effectively sorting by time)
-#   preprocess and tokenize each tweet like the stanford glove model
-#   concatenate to a file
-#
-# concatenate each tokenized file into one 7z-compressed glove-friendly corpus, with each user separated by line
+TOKENIZE="$HOME/code/Sock-Puppet/sockpuppet/model/dataset/twitter_tokenize.py"
+TWITTER_DIR="$HOME/scratch/twitter"
+TOKENIZED_DIR="$TWITTER_DIR/tokenized"
+
+mkdir -p "$TOKENIZED_DIR"
+
+function tokenize() {
+    ARCHIVE="$1"
+    OUTDIR="$2"
+    BASENAME="$(basename -s.7z "$ARCHIVE")"
+
+
+    echo "Tokenizing the tweets in $ARCHIVE"
+
+    7z e -so "$ARCHIVE" | \
+        jq -R 'try (fromjson | .text, .full_text | values) catch empty' | \
+        python3 -OO "$TOKENIZE" \
+    > "$TOKENIZED_DIR/$BASENAME.txt"
+
+    echo "Done processing $ARCHIVE"
+}
+
+while read i; do
+    tokenize "$i" "$TOKENIZED_DIR" &
+done < <(find . -name '*twitter-stream-*.7z' -or -name 'tweets.*.7z')
+
+wait
+
+cat $TOKENIZED_DIR/*.txt > "$TWITTER_DIR/corpus.txt"
