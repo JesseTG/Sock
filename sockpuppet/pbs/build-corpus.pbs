@@ -36,6 +36,6 @@ done < <(find . -name '*twitter-stream-*.7z' -or -name 'tweets.*.7z')
 wait
 
 cat $TOKENIZED_DIR/*.txt > "$TWITTER_DIR/corpus.txt"
-rm -rf $TOKENIZED_DIR/*.txt
+rm -rf "$TOKENIZED_DIR"
 
 echo "$(date) All done"
