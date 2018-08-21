@@ -21,7 +21,7 @@ function tokenize() {
     echo "$(date) Tokenizing the tweets in $ARCHIVE"
 
     7z e -so "$ARCHIVE" | \
-        jq -R 'try (fromjson | .text, .full_text | values) catch empty' | \
+        jq -rR 'try (fromjson | .text, .full_text | values) catch empty' | \
         python3 -OO "$TOKENIZE" \
     > "$TOKENIZED_DIR/$BASENAME.txt"
 
