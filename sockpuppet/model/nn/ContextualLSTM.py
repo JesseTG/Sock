@@ -61,14 +61,12 @@ class ContextualLSTM(nn.Module):
         lengths = None
         if isinstance(sentences, PaddedSequence):
             # If these sentences have already been padded (likely with a DataLoader)...
-            self.hidden = self._init_hidden(len(sentences.padded))
             padded = sentences.padded
             lengths = sentences.lengths
 
         elif isinstance(sentences, Sequence) or torch.is_tensor(sentences):
             # Else if this is a plain list of tensors (likely given manually)...
             # We must pack them ourselves
-            self.hidden = self._init_hidden(len(sentences))
             sorted_sentences = sorted(sentences, key=len, reverse=True)
             lengths = torch.as_tensor([len(s) for s in sorted_sentences], dtype=torch.long, device=self.device)
             padded = pad_sequence(sorted_sentences, False, self.embeddings.padding_idx)
@@ -77,6 +75,8 @@ class ContextualLSTM(nn.Module):
         else:
             raise TypeError(f"sentences cannot be a {type(sentences)}")
 
+        num_sentences = len(lengths)
+        self.hidden = self._init_hidden(num_sentences)
         embedding = self.embeddings(padded)
         # ^ Size([num_tweets, longest_tweet, self.word_embeddings.dim])
 
@@ -91,12 +91,12 @@ class ContextualLSTM(nn.Module):
         # hn: Last element's hidden state
         # cn: Last element's cell state
 
-        hn = hn.view(len(lengths), self.lstm.hidden_size)
+        hn = hn.view(num_sentences, self.lstm.hidden_size)
         # Only using one LSTM layer
 
         a = functional.relu(self.dense1(hn))  # Size([???]) -> Size([???])
         b = functional.relu(self.dense2(a))  # Size([???]) -> Size([???])
         c = torch.sigmoid(self.output(b))  # Size([???]) -> Size([num_tweets, 1])
-        return c.view(len(lengths))
+        return c.view(num_sentences)
         # TODO: Consider using BCEWithLogitsLoss
         # TODO: What optimizer did the paper use?  What loss function?
