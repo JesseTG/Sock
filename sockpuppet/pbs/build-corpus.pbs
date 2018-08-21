@@ -17,15 +17,16 @@ function tokenize() {
     BASENAME="$(basename -s.7z "$ARCHIVE")"
 
 
-    echo "Tokenizing the tweets in $ARCHIVE"
+    echo "$(date) Tokenizing the tweets in $ARCHIVE"
 
     7z e -so "$ARCHIVE" | \
         jq -R 'try (fromjson | .text, .full_text | values) catch empty' | \
         python3 -OO "$TOKENIZE" \
     > "$TOKENIZED_DIR/$BASENAME.txt"
 
-    echo "Done processing $ARCHIVE"
+    echo "$(date) Done processing $ARCHIVE"
 }
+
 
 while read i; do
     tokenize "$i" "$TOKENIZED_DIR" &
@@ -35,3 +36,5 @@ wait
 
 cat $TOKENIZED_DIR/*.txt > "$TWITTER_DIR/corpus.txt"
 rm -rf $TOKENIZED_DIR/*.txt
+
+echo "$(date) All done"
