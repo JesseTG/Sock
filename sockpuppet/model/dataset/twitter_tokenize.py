@@ -22,6 +22,8 @@ REPEATED_PUNCTUATION = re.compile(r"([!?.])\1+")
 OTHER_PUNCTUATION = re.compile(r"([\",:;=+.!?()])")
 ELONGATED_WORDS = re.compile(r"\b(\S*?)(.)\2{2,}\b")
 RETWEET = re.compile(r"^RT\b")
+DOUBLE_QUOTES = re.compile(r"[❝❞🙶🙷“”‟]")
+SINGLE_QUOTES = re.compile(r"[❛❜‘’‛❛❜]")
 ALL_CAPS_WORDS = re.compile(r"\b([^a-z0-9()<>'`\s-]{2,})\b")
 
 
@@ -64,6 +66,10 @@ def tokenize(input: str) -> List[str]:
 
     input = OTHER_PUNCTUATION.sub(r" \1 ", input)
     # Other common punctuation that might or might not be surrounded by whitespace
+
+    input = SINGLE_QUOTES.sub("'", input)
+    input = DOUBLE_QUOTES.sub('"', input)
+    # There are like, eight different types of quotes.  Let's canonicalize them
 
     input = ELONGATED_WORDS.sub(r"\1\2 <elong> ", input)
     # Mark elongated words (eg. "wayyyy" => "way <elong>")
