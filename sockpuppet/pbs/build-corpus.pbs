@@ -25,6 +25,7 @@ function tokenize() {
         python3 -OO "$TOKENIZE" \
     > "$TOKENIZED_DIR/$BASENAME.txt"
 
+    # TODO: Output newlines as literal "\n"
     echo "$(date) Done processing $ARCHIVE"
 }
 
