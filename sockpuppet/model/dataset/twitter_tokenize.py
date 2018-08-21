@@ -26,6 +26,7 @@ DOUBLE_QUOTES = re.compile(r"[❝❞🙶🙷“”‟]")
 SINGLE_QUOTES = re.compile(r"[❛❜‘’‛❛❜]")
 NEWLINE = re.compile(r"\n(?!$)")
 ALL_CAPS_WORDS = re.compile(r"\b([^a-z0-9()<>'`\s-]{2,})\b")
+# TODO: Add a regex for emails
 
 
 def tokenize(input: str) -> List[str]:
