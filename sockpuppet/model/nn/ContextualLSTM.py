@@ -7,6 +7,7 @@ from torch.nn import functional
 from torch.nn.utils.rnn import PackedSequence, pack_sequence, pad_sequence, pad_packed_sequence, pack_padded_sequence
 from torch import Tensor, LongTensor
 
+from sockpuppet.model.dataset import PaddedSequence
 from sockpuppet.model.embedding import WordEmbeddings
 
 
@@ -52,16 +53,29 @@ class ContextualLSTM(nn.Module):
     def extra_repr(self) -> str:
         return f"<device>: {self.device}"
 
-    def forward(self, sentences) -> Tensor:
+    def forward(self, sentences: Union[Sequence[LongTensor], PaddedSequence]) -> Tensor:
         # IN: List of LongTensors
         # OUT: One FloatTensor
-        self.hidden = self._init_hidden(len(sentences))
 
-        sentences = sorted(sentences, key=len, reverse=True)
-        lengths = torch.as_tensor([len(s) for s in sentences], dtype=torch.long, device=self.device)
+        padded = None
+        lengths = None
+        if isinstance(sentences, PaddedSequence):
+            # If these sentences have already been padded (likely with a DataLoader)...
+            self.hidden = self._init_hidden(len(sentences.padded))
+            padded = sentences.padded
+            lengths = sentences.lengths
 
-        padded = pad_sequence(sentences, False, self.embeddings.padding_idx)
-        # ^ Size([num_tweets, longest_tweet])
+        elif isinstance(sentences, Sequence) or torch.is_tensor(sentences):
+            # Else if this is a plain list of tensors (likely given manually)...
+            # We must pack them ourselves
+            self.hidden = self._init_hidden(len(sentences))
+            sorted_sentences = sorted(sentences, key=len, reverse=True)
+            lengths = torch.as_tensor([len(s) for s in sorted_sentences], dtype=torch.long, device=self.device)
+            padded = pad_sequence(sorted_sentences, False, self.embeddings.padding_idx)
+            # ^ Size([num_tweets, longest_tweet])
+            # TODO: Replace this part with a call to sentence_pad
+        else:
+            raise TypeError(f"sentences cannot be a {type(sentences)}")
 
         embedding = self.embeddings(padded)
         # ^ Size([num_tweets, longest_tweet, self.word_embeddings.dim])
@@ -77,7 +91,7 @@ class ContextualLSTM(nn.Module):
         # hn: Last element's hidden state
         # cn: Last element's cell state
 
-        hn = hn.view(len(sentences), self.lstm.hidden_size)
+        hn = hn.view(len(lengths), self.lstm.hidden_size)
         # Only using one LSTM layer
 
         a = functional.relu(self.dense1(hn))  # Size([???]) -> Size([???])

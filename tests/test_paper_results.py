@@ -15,13 +15,13 @@ from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
 from sockpuppet.model.dataset.cresci import CresciTensorTweetDataset
-from sockpuppet.model.dataset import sentence_collate, sentence_label_collate
+from sockpuppet.model.dataset import sentence_pad, sentence_label_pad
 from sockpuppet.utils import split_integers
 from tests.marks import *
 
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 5
-BATCH_SIZE = 128
+BATCH_SIZE = 1000
 
 NOT_BOT = 0
 BOT = 1
@@ -64,7 +64,7 @@ def training_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_collate)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
 
 
 @pytest.fixture(scope="module")
@@ -77,7 +77,7 @@ def validation_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_collate)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
 
 
 @pytest.fixture(scope="module")
@@ -90,7 +90,7 @@ def testing_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_collate)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
 
 
 def test_split_ratios_add_to_1():
@@ -145,6 +145,7 @@ def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation
         }
     )
 
+    # TODO: Move this to a fixture, then have the tests be about the metrics
     @trainer.on(Events.STARTED)
     def init_metrics(trainer: Engine):
         trainer.state.loss = []
@@ -174,3 +175,15 @@ def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation
     assert trainer.state.accuracy[-1] >= 0.80
     assert trainer.state.accuracy[-1] >= 0.90
     assert trainer.state.accuracy[-1] >= 0.95
+
+    assert trainer.state.precision[-1] >= 0.50
+    assert trainer.state.precision[-1] >= 0.60
+    assert trainer.state.precision[-1] >= 0.70
+    assert trainer.state.precision[-1] >= 0.80
+    assert trainer.state.percision[-1] >= 0.90
+
+    assert trainer.state.recall[-1] >= 0.50
+    assert trainer.state.recall[-1] >= 0.60
+    assert trainer.state.recall[-1] >= 0.70
+    assert trainer.state.recall[-1] >= 0.80
+    assert trainer.state.recall[-1] >= 0.90

@@ -4,7 +4,7 @@ import numpy
 from torch.utils.data import DataLoader, Dataset, ConcatDataset
 from torch.utils.data.dataloader import default_collate
 from torch.utils.data.sampler import SubsetRandomSampler, Sampler
-from sockpuppet.model.dataset import sentence_collate
+from sockpuppet.model.dataset import sentence_pad, PaddedSequence
 from .marks import *
 
 torch.manual_seed(0)
@@ -50,7 +50,7 @@ def test_bench_dataloader_iteration(benchmark, dataset: Dataset, sampler: Sample
             num_workers=num_workers,
             pin_memory=pin_memory,
             batch_size=batch_size,
-            collate_fn=(sentence_collate if batch_size > 1 else default_collate)
+            collate_fn=(sentence_pad if batch_size > 1 else default_collate)
         )
 
         tensors = [t for t in loader]
@@ -70,8 +70,8 @@ def test_dataloader_pin(dataset: Dataset, sampler: Sampler):
 
 @modes("cpu", "cuda")
 def test_dataloader_batch(dataset: Dataset, sampler: Sampler):
-    loader = DataLoader(dataset=dataset, sampler=sampler, collate_fn=sentence_collate, batch_size=8)
+    loader = DataLoader(dataset=dataset, sampler=sampler, collate_fn=sentence_pad, batch_size=8)
     tensors = [t for t in loader]
 
     assert len(tensors) > 0
-    assert torch.is_tensor(tensors[0])
+    assert isinstance(tensors[0], PaddedSequence)
