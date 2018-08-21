@@ -170,11 +170,15 @@ def test_training_doesnt_change_word_embeddings(trainer: Engine, training_datase
 
 @modes("cuda", "dp")  # CUDA only, to save time
 @slow
-def test_training_improves_metrics(device: torch.device, trainer: Engine, dataloaders: DataLoaders):
+def test_training_improves_metrics(device: torch.device, trainer: Engine, datasets: Datasets):
     def tf(y):
         # TODO: Move to general utility function elsewhere
         return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
 
+    loaders = DataLoaders(
+        DataLoader(datasets.training, batch_size=500),
+        DataLoader(datasets.validation, batch_size=500),
+    )
     mapping = torch.as_tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
 
     def tf_2class(output):
@@ -203,13 +207,13 @@ def test_training_improves_metrics(device: torch.device, trainer: Engine, datalo
 
     @trainer.on(Events.EPOCH_COMPLETED)
     def validate(trainer: Engine):
-        validator.run(dataloaders.validation)
+        validator.run(loaders.validation)
         trainer.state.loss.append(validator.state.metrics["loss"])
         trainer.state.accuracy.append(validator.state.metrics["accuracy"])
         trainer.state.recall.append(validator.state.metrics["recall"])
         trainer.state.precision.append(validator.state.metrics["precision"])
 
-    trainer.run(dataloaders.training, max_epochs=25)
+    trainer.run(loaders.training, max_epochs=25)
 
     assert len(trainer.state.loss) > 1
     assert len(trainer.state.accuracy) > 1
