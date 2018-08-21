@@ -54,6 +54,10 @@ from sockpuppet.model.dataset.twitter_tokenize import tokenize
     ("I will never watch RT again.", "i will never watch rt <allcaps> again ."),
     ("This is\nthe end", "this is <newline> the end"),
     ("The last\nline\n", "the last <newline> line"),
+    ("  ", "<empty>"),
+    ("\n", "<empty>"),
+    ("\n\n", "<empty>"),
+    ("Two line breaks at the end\n\n", "two line breaks at the end"),
 ])
 def test_tokenize(input, expected):
     actual = tokenize(input)
