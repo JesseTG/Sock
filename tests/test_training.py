@@ -17,7 +17,7 @@ from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset import LabelDataset, sentence_label_collate
 from tests.marks import *
 
-BATCH_SIZES = [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000]
+BATCH_SIZES = [1, 5, 10, 25, 50, 100, 250, 500, 1000]
 VALIDATE_EVERY = 100
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 5
@@ -65,7 +65,7 @@ def training_tensors(request, device: torch.device):
 
 @pytest.fixture(scope="module")
 def training_tensors_cpu(glove_data: DataFrame):
-    return make_data("cpu", len(glove_data), 256)
+    return make_data("cpu", len(glove_data), 8000)
 
 
 @pytest.fixture(scope="module")
@@ -88,7 +88,7 @@ def validation_tensors(request, device: torch.device):
 
 @pytest.fixture(scope="module")
 def validation_tensors_cpu(glove_data: DataFrame):
-    return make_data("cpu", len(glove_data), 1024)
+    return make_data("cpu", len(glove_data), 32000)
 
 
 @pytest.fixture(scope="module")
@@ -133,6 +133,7 @@ def test_bench_make_data(benchmark, device: torch.device, glove_data: DataFrame)
 
 
 @modes("cuda")
+@slow
 @pytest.mark.benchmark(group="training")
 def test_bench_training_cuda(benchmark, trainer: Engine, dataloaders: DataLoaders):
     result = benchmark(trainer.run, dataloaders.training, max_epochs=MAX_EPOCHS)
@@ -141,6 +142,7 @@ def test_bench_training_cuda(benchmark, trainer: Engine, dataloaders: DataLoader
 
 
 @modes("dp")
+@slow
 @pytest.mark.benchmark(group="training")
 @pytest.mark.parametrize("batch_size", [b * NUM_GPUS for b in BATCH_SIZES])
 def test_bench_training_dp(benchmark, trainer: Engine, training_dataset: LabelDataset, batch_size: int):
