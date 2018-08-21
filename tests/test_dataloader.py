@@ -29,7 +29,7 @@ def test_create_dataloader(dataset: Dataset, sampler: Sampler, num_workers: int)
 
 
 @modes("cpu", "cuda")
-@pytest.mark.parametrize("num_workers", [0, 1])
+@pytest.mark.parametrize("num_workers", [0])
 def test_iterate_dataloader_one_thread(dataset: Dataset, sampler: Sampler, num_workers: int):
     loader = DataLoader(dataset=dataset, sampler=sampler, num_workers=num_workers)
     tensors = [t for t in loader]
