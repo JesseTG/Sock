@@ -34,6 +34,9 @@ def tokenize(input: str) -> List[str]:
     if len(input) == 0:
         return ["<empty>"]
 
+    input = input.replace("\n", " <newline> ")
+    # Replace newlines in tweets with <newline>
+
     input = RETWEET.sub("<retweet> ", input)
 
     input = URLS.sub("<url>", input)
