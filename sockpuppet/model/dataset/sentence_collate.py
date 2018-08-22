@@ -6,6 +6,7 @@ from torch.nn.utils.rnn import pad_sequence, pack_sequence, PackedSequence
 
 PackedSentences = namedtuple("PackedSentences", ["packed", "lengths"])
 PaddedSequence = namedtuple("PaddedSequence", ["data", "lengths"])
+# TODO: Renamed to PaddedBatch
 
 
 def sentence_collate(sentences: Sequence[LongTensor]) -> LongTensor:

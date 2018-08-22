@@ -40,7 +40,9 @@ def is_monotonically_decreasing(numbers: Sequence[float]) -> bool:
 
 
 def make_data(device: torch.device, max_index: int, total: int):
-    # TODO: Make the data follow some pattern instead of random noise
+    # TODO: Make the data follow some pattern instead of random noise (e.g. a normal distribution over the range of indices)
+    # use torch.randn
+
     num_words = max_index - 1
     size = (total // 2, 32)
 
