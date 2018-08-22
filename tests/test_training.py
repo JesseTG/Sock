@@ -17,7 +17,7 @@ from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset import LabelDataset, sentence_label_collate
 from tests.marks import *
 
-BATCH_SIZES = [1, 5, 10, 25, 50, 100, 250, 500, 1000]
+BATCH_SIZES = [100, 250, 500, 1000]
 VALIDATE_EVERY = 100
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 5
@@ -178,8 +178,8 @@ def test_training_improves_metrics(device: torch.device, trainer: Engine, datase
         return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
 
     loaders = DataLoaders(
-        DataLoader(datasets.training, batch_size=500),
-        DataLoader(datasets.validation, batch_size=500),
+        DataLoader(datasets.training, batch_size=1000),
+        DataLoader(datasets.validation, batch_size=1000),
     )
     mapping = torch.as_tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
 
