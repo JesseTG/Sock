@@ -159,7 +159,7 @@ def test_bench_training_dp(benchmark, trainer: Engine, training_dataset: LabelDa
 @modes("cuda")
 def test_training_doesnt_change_word_embeddings(trainer: Engine, training_dataset: Dataset, glove_embedding: WordEmbeddings):
     # TODO: Make a dp version
-    training = DataLoader(training_dataset, batch_size=32)
+    training = DataLoader(training_dataset, batch_size=1000)
     embeddings = torch.tensor(glove_embedding.vectors)
     result = trainer.run(training, max_epochs=MAX_EPOCHS)
 
