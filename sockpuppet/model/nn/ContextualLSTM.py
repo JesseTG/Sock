@@ -63,7 +63,11 @@ class ContextualLSTM(nn.Module):
             # If these sentences have already been padded (likely with a DataLoader)...
             padded = sentences.padded
             lengths = sentences.lengths
-
+        elif isinstance(sentences, Sequence) and len(sentences) == 2 \
+                and torch.is_tensor(sentences[0]) and torch.is_tensor(sentences[1]) \
+                and sentences[0].dim() == 2 and sentences[1].dim() == 1:
+            padded = sentences[0]
+            lengths = sentences[1]
         elif isinstance(sentences, Sequence) or torch.is_tensor(sentences):
             # Else if this is a plain list of tensors (likely given manually)...
             # We must pack them ourselves
