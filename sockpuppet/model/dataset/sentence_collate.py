@@ -38,6 +38,6 @@ def sentence_label_pad(sentences: Sequence[Tuple[LongTensor, int]]) -> Tuple[Pad
     encodings = [s[0] for s in sorted_sentences]
     padded = pad_sequence(encodings, True, 0)
     labels = torch.as_tensor([s[1] for s in sorted_sentences], dtype=torch.float, device=padded.device)
-    lengths = torch.as_tensor([len(s) for s in sorted_sentences], dtype=torch.long, device=padded.device)
+    lengths = torch.as_tensor([len(s[0]) for s in sorted_sentences], dtype=torch.long, device=padded.device)
 
     return PaddedSequence(padded, lengths), labels
