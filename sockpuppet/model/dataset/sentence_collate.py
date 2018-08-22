@@ -10,14 +10,14 @@ PaddedSequence = namedtuple("PaddedSequence", ["data", "lengths"])
 
 def sentence_collate(sentences: Sequence[LongTensor]) -> LongTensor:
     sentences = sorted(sentences, key=len, reverse=True)
-    padded = pad_sequence(sentences, False, 0)
+    padded = pad_sequence(sentences, True, 0)
 
     return padded
 
 
 def sentence_pad(sentences: Sequence[LongTensor]) -> PaddedSequence:
     sorted_sentences = sorted(sentences, key=len, reverse=True)
-    padded = pad_sequence(sorted_sentences, False, 0)
+    padded = pad_sequence(sorted_sentences, True, 0)
     lengths = torch.as_tensor([len(s) for s in sorted_sentences], dtype=torch.long, device=padded.device)
 
     return PaddedSequence(padded, lengths)

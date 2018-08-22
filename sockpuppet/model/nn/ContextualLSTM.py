@@ -69,7 +69,7 @@ class ContextualLSTM(nn.Module):
             # We must pack them ourselves
             sorted_sentences = sorted(sentences, key=len, reverse=True)
             lengths = torch.as_tensor([len(s) for s in sorted_sentences], dtype=torch.long, device=self.device)
-            padded = pad_sequence(sorted_sentences, False, self.embeddings.padding_idx)
+            padded = pad_sequence(sorted_sentences, True, self.embeddings.padding_idx)
             # ^ Size([num_tweets, longest_tweet])
             # TODO: Replace this part with a call to sentence_pad
         else:
@@ -80,7 +80,7 @@ class ContextualLSTM(nn.Module):
         embedding = self.embeddings(padded)
         # ^ Size([num_tweets, longest_tweet, self.word_embeddings.dim])
 
-        packed = pack_padded_sequence(embedding, lengths, False)
+        packed = pack_padded_sequence(embedding, lengths, True)
         self.lstm.flatten_parameters()
         # NOTE: Don't know what this does, need to ask around
 
