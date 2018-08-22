@@ -180,7 +180,7 @@ def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation
     assert trainer.state.precision[-1] >= 0.60
     assert trainer.state.precision[-1] >= 0.70
     assert trainer.state.precision[-1] >= 0.80
-    assert trainer.state.percision[-1] >= 0.90
+    assert trainer.state.precision[-1] >= 0.90
 
     assert trainer.state.recall[-1] >= 0.50
     assert trainer.state.recall[-1] >= 0.60
