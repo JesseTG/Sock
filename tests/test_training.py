@@ -151,7 +151,8 @@ def test_bench_training_cuda(benchmark, trainer: Engine, dataloaders: DataLoader
 @pytest.mark.benchmark(group="training")
 @pytest.mark.parametrize("batch_size", [b * NUM_GPUS for b in BATCH_SIZES])
 def test_bench_training_dp(benchmark, trainer: Engine, training_dataset: LabelDataset, batch_size: int):
-    result = benchmark(trainer.run, training_dataset, max_epochs=MAX_EPOCHS)
+    loader = DataLoader(training_dataset, batch_size=batch_size, collate_fn=sentence_label_pad),
+    result = benchmark(trainer.run, loader, max_epochs=MAX_EPOCHS)
 
     assert result is not None
 
