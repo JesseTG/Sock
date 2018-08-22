@@ -2,6 +2,8 @@ import pytest
 import torch
 from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
+from sockpuppet.model.dataset import sentence_label_pad, sentence_pad
+
 from tests.marks import *
 
 
@@ -43,17 +45,17 @@ def test_lstm_moves_embeddings_to_cuda_in_dp_mode(lstm_dp):
 @modes("cuda", "dp")
 def test_lstm_needs_input_from_same_device(lstm: ContextualLSTM):
     with pytest.raises(RuntimeError):
-        encoding = [
+        encoding = sentence_pad([
             torch.tensor([0, 1, 5, 78, 3, 1], dtype=torch.long, device="cpu")
-        ]
+        ])
 
         lstm(encoding)
 
 
 def test_lstm_evaluates(lstm: ContextualLSTM, device: torch.device):
-    encoding = [
+    encoding = sentence_pad([
         torch.tensor([7, 1, 5, 78, 3, 1], dtype=torch.long, device=device)
-    ]
+    ])
 
     result = lstm(encoding)
     assert torch.is_tensor(result)
@@ -72,7 +74,7 @@ def test_lstm_rejects_list_of_lists(lstm: ContextualLSTM):
         result = lstm(encoding)
 
 
-def test_lstm_evaluates_batches_of_same_length_in_tensor(lstm: ContextualLSTM, device: torch.device):
+def test_lstm_rejects_tensor(lstm: ContextualLSTM, device: torch.device):
     encoding = torch.tensor([
         [0, 1, 5, 8, 3, 1],
         [1, 4, 6, 1, 9, 7],
@@ -80,70 +82,57 @@ def test_lstm_evaluates_batches_of_same_length_in_tensor(lstm: ContextualLSTM, d
         [2, 3, 6, 1, 2, 4],
     ], dtype=torch.long, device=device)
 
-    result = lstm(encoding)
-    assert torch.is_tensor(result)
+    with pytest.raises(Exception):
+        result = lstm(encoding)
 
 
-def test_lstm_evaluates_batches_of_same_length_in_list_of_tensors(lstm: ContextualLSTM, device: torch.device):
-    encoding = [
+def test_lstm_evaluates_batches_of_same_length(lstm: ContextualLSTM, device: torch.device):
+    encoding = sentence_pad([
         torch.tensor([0, 1, 5, 8, 3, 1], dtype=torch.long, device=device),
         torch.tensor([1, 4, 6, 1, 9, 7], dtype=torch.long, device=device),
         torch.tensor([9, 0, 6, 9, 9, 0], dtype=torch.long, device=device),
         torch.tensor([2, 3, 6, 1, 2, 4], dtype=torch.long, device=device),
-    ]
+    ])
 
     result = lstm(encoding)
     assert torch.is_tensor(result)
 
 
-def test_lstm_evaluates_batches_of_different_length_in_list_of_tensors_unsorted(lstm: ContextualLSTM, device: torch.device):
-    encoding = [
+def test_lstm_evaluates_batches_of_different_length_unsorted(lstm: ContextualLSTM, device: torch.device):
+    encoding = sentence_pad([
         torch.tensor([0, 1, 5, 8, 3], dtype=torch.long, device=device),
         torch.tensor([1, 4, 6, 1, 9, 7, 9, 1], dtype=torch.long, device=device),
         torch.tensor([9, 0, 6, 9], dtype=torch.long, device=device),
         torch.tensor([2, 3, 6, 1, 2, 4, 4], dtype=torch.long, device=device),
-    ]
+    ])
 
     result = lstm(encoding)
     assert torch.is_tensor(result)
 
 
-def test_lstm_evaluates_batches_of_different_length_in_list_of_tensors_sorted(lstm: ContextualLSTM, device: torch.device):
-    encoding = [
+def test_lstm_evaluates_batches_of_different_length_in_sorted(lstm: ContextualLSTM, device: torch.device):
+    encoding = sentence_pad([
         torch.tensor([1, 4, 6, 1, 9, 7, 9, 1], dtype=torch.long, device=device),
         torch.tensor([2, 3, 6, 1, 2, 4, 4], dtype=torch.long, device=device),
         torch.tensor([0, 1, 5, 8, 3], dtype=torch.long, device=device),
         torch.tensor([9, 0, 6, 9], dtype=torch.long, device=device),
-    ]
+    ])
 
     result = lstm(encoding)
     assert torch.is_tensor(result)
 
 
-def test_lstm_returns_1d_float_tensor_from_list_of_tensors(lstm: ContextualLSTM, device: torch.device):
-    encoding = [
+def test_lstm_returns_1d_float_tensor(lstm: ContextualLSTM, device: torch.device):
+    encoding = sentence_pad([
         torch.tensor([0, 1, 5, 8, 3, 1], dtype=torch.long, device=device),
         torch.tensor([1, 4, 6, 1, 9, 7], dtype=torch.long, device=device),
         torch.tensor([9, 0, 6, 9, 9, 0], dtype=torch.long, device=device),
         torch.tensor([2, 3, 6, 1, 2, 4], dtype=torch.long, device=device),
-    ]
+    ])
 
     result = lstm(encoding)
     assert result.dtype.is_floating_point
-    assert result.shape == torch.Size([len(encoding)])
-
-
-def test_lstm_returns_1d_float_tensor_from_tensor(lstm: ContextualLSTM, device: torch.device):
-    encoding = torch.tensor([
-        [0, 1, 5, 8, 3, 1],
-        [1, 4, 6, 1, 9, 7],
-        [9, 0, 6, 9, 9, 0],
-        [2, 3, 6, 1, 2, 4],
-    ], dtype=torch.long, device=device)
-
-    result = lstm(encoding)
-    assert result.dtype.is_floating_point
-    assert result.shape == torch.Size([len(encoding)])
+    assert result.shape == torch.Size([len(encoding[0])])
 
 
 def test_get_lstm_cpu(request, lstm_cpu: ContextualLSTM):

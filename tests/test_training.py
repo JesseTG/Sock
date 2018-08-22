@@ -14,7 +14,7 @@ from ignite.engine import Events, Engine
 import ignite.metrics
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
-from sockpuppet.model.dataset import LabelDataset, sentence_label_collate
+from sockpuppet.model.dataset import LabelDataset, sentence_label_pad
 from tests.marks import *
 
 BATCH_SIZES = [100, 250, 500, 1000]
@@ -43,14 +43,16 @@ def make_data(device: torch.device, max_index: int, total: int):
     # TODO: Make the data follow some pattern instead of random noise (e.g. a normal distribution over the range of indices)
     # use torch.randn
 
-    num_words = max_index - 1
     size = (total // 2, 32)
+    std = round(max_index * 0.001)
 
-    tensor0 = torch.randint(low=0, high=num_words // 2, size=size, dtype=torch.long, device=device)
+    mean0 = (max_index // 2) // 2 + 1
+    tensor0 = torch.normal(torch.full(size, mean0, dtype=torch.float, device=device), std=std).round().long()
     labels0 = torch.zeros([len(tensor0)], dtype=torch.float, device=device)
     # Zeros have lower-numbered word indices
 
-    tensor1 = torch.randint(low=(num_words // 2) + 1, high=num_words, size=size, dtype=torch.long, device=device)
+    mean1 = ((max_index // 2) + max_index) // 2 + 1
+    tensor1 = torch.normal(torch.full(size, mean1, dtype=torch.float, device=device), std=std).round().long()
     labels1 = torch.ones([len(tensor1)], dtype=torch.float, device=device)
     # Ones have higher-numbered word indices
 
@@ -121,8 +123,8 @@ def datasets(training_dataset: LabelDataset, validation_dataset: LabelDataset):
 @pytest.fixture(scope="module", params=BATCH_SIZES)
 def dataloaders(request, datasets: Datasets):
     return DataLoaders(
-        DataLoader(datasets.training, batch_size=request.param),
-        DataLoader(datasets.validation, batch_size=request.param),
+        DataLoader(datasets.training, batch_size=request.param, collate_fn=sentence_label_pad),
+        DataLoader(datasets.validation, batch_size=request.param, collate_fn=sentence_label_pad),
     )
     # The default collate_fn is sufficient; this isn't supposed to be real data
 
@@ -154,14 +156,12 @@ def test_bench_training_dp(benchmark, trainer: Engine, training_dataset: LabelDa
     assert result is not None
 
 
-# TODO: Ensure non-blocking CUDA works
-# TODO: Ensure pinned memory works
 # TODO: Split the training process off into a fixture
 
 @modes("cuda")
 def test_training_doesnt_change_word_embeddings(trainer: Engine, training_dataset: Dataset, glove_embedding: WordEmbeddings):
     # TODO: Make a dp version
-    training = DataLoader(training_dataset, batch_size=1000)
+    training = DataLoader(training_dataset, batch_size=1000, collate_fn=sentence_label_pad)
     embeddings = torch.tensor(glove_embedding.vectors)
     result = trainer.run(training, max_epochs=MAX_EPOCHS)
 
@@ -178,8 +178,8 @@ def test_training_improves_metrics(device: torch.device, trainer: Engine, datase
         return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
 
     loaders = DataLoaders(
-        DataLoader(datasets.training, batch_size=1000),
-        DataLoader(datasets.validation, batch_size=1000),
+        DataLoader(datasets.training, batch_size=1000, collate_fn=sentence_label_pad),
+        DataLoader(datasets.validation, batch_size=1000, collate_fn=sentence_label_pad),
     )
     mapping = torch.as_tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
 

@@ -53,32 +53,9 @@ class ContextualLSTM(nn.Module):
     def extra_repr(self) -> str:
         return f"<device>: {self.device}"
 
-    def forward(self, sentences: Union[Sequence[LongTensor], PaddedSequence]) -> Tensor:
-        # IN: List of LongTensors
-        # OUT: One FloatTensor
-
-        padded = None
-        lengths = None
-        if isinstance(sentences, PaddedSequence):
-            # If these sentences have already been padded (likely with a DataLoader)...
-            padded = sentences.padded
-            lengths = sentences.lengths
-        elif isinstance(sentences, Sequence) and len(sentences) == 2 \
-                and torch.is_tensor(sentences[0]) and torch.is_tensor(sentences[1]) \
-                and sentences[0].dim() == 2 and sentences[1].dim() == 1:
-            padded = sentences[0]
-            lengths = sentences[1]
-        elif isinstance(sentences, Sequence) or torch.is_tensor(sentences):
-            # Else if this is a plain list of tensors (likely given manually)...
-            # We must pack them ourselves
-            sorted_sentences = sorted(sentences, key=len, reverse=True)
-            lengths = torch.as_tensor([len(s) for s in sorted_sentences], dtype=torch.long, device=self.device)
-            padded = pad_sequence(sorted_sentences, True, self.embeddings.padding_idx)
-            # ^ Size([num_tweets, longest_tweet])
-            # TODO: Replace this part with a call to sentence_pad
-        else:
-            raise TypeError(f"sentences cannot be a {type(sentences)}")
-
+    def forward(self, sentences: Sequence[LongTensor]) -> Tensor:
+        padded = sentences[0]
+        lengths = sentences[1]
         num_sentences = len(lengths)
         self.hidden = self._init_hidden(num_sentences)
         embedding = self.embeddings(padded)
