@@ -126,7 +126,6 @@ def dataloaders(request, datasets: Datasets):
         DataLoader(datasets.training, batch_size=request.param, collate_fn=sentence_label_pad),
         DataLoader(datasets.validation, batch_size=request.param, collate_fn=sentence_label_pad),
     )
-    # The default collate_fn is sufficient; this isn't supposed to be real data
 
 
 @modes("cpu", "cuda")
@@ -151,7 +150,7 @@ def test_bench_training_cuda(benchmark, trainer: Engine, dataloaders: DataLoader
 @pytest.mark.benchmark(group="training")
 @pytest.mark.parametrize("batch_size", [b * NUM_GPUS for b in BATCH_SIZES])
 def test_bench_training_dp(benchmark, trainer: Engine, training_dataset: LabelDataset, batch_size: int):
-    loader = DataLoader(training_dataset, batch_size=batch_size, collate_fn=sentence_label_pad),
+    loader = DataLoader(training_dataset, batch_size=batch_size, collate_fn=sentence_label_pad)
     result = benchmark(trainer.run, loader, max_epochs=MAX_EPOCHS)
 
     assert result is not None
