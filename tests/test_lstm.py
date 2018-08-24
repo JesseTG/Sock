@@ -62,6 +62,17 @@ def test_lstm_evaluates(lstm: ContextualLSTM, device: torch.device):
     assert result.device == device
 
 
+@pytest.mark.benchmark(group="test_bench_lstm_evaluates")
+def test_bench_lstm_evaluates(benchmark, lstm: ContextualLSTM, device: torch.device):
+    encoding = sentence_pad([
+        torch.tensor([7, 1, 5, 78, 3, 1], dtype=torch.long, device=device)
+    ] * 1000)
+
+    result = benchmark(lstm, encoding)
+    assert torch.is_tensor(result)
+    assert result.device == device
+
+
 def test_lstm_rejects_list_of_lists(lstm: ContextualLSTM):
     encoding = [
         [0, 1, 5, 8, 3, 1],
