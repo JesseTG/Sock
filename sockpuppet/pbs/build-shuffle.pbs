@@ -19,6 +19,4 @@ mkdir -p "$CUSTOM_GLOVE"
 
 cd "$WORKING_DIR"
 
-cat "$WORKING_DIR/corpus.txt" | vocab_count -verbose 2 -min-count 10 > "$CUSTOM_GLOVE/vocab.txt"
-cooccur -memory 120.0 -vocab-file "$CUSTOM_GLOVE/vocab.txt" < "$WORKING_DIR/corpus.txt" > "$CUSTOM_GLOVE/cooccurrences.bin"
-shuffle -memory 120.0 < "$CUSTOM_GLOVE/cooccurrences.bin" > "$CUSTOM_GLOVE/cooccurrences.shuf.bin"
+shuffle -memory 100.0 < "$CUSTOM_GLOVE/cooccurrences.bin" > "$CUSTOM_GLOVE/cooccurrences.shuf.bin"

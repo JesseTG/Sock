@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#PBS -k eo
+#PBS -l nodes=1:ppn=28,walltime=168:00:00
+#PBS -q extended
+
+# see the glove repo demo.sh for details, but the order is basically:
+# vocab_count
+# cooccur
+# shuffle
+# glove
+# you can pipe from stdin, so it's ok to compress the corpus
+
+module load shared
+module load anaconda/.anaconda
+
+WORKING_DIR="$HOME/scratch/twitter"
+CUSTOM_GLOVE="$WORKING_DIR/custom-glove"
+mkdir -p "$CUSTOM_GLOVE"
+
+cd "$WORKING_DIR"
+
+cooccur -memory 120.0 -vocab-file "$CUSTOM_GLOVE/vocab.txt" < "$WORKING_DIR/corpus.txt" > "$CUSTOM_GLOVE/cooccurrences.bin"
