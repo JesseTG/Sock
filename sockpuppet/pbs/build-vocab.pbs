@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #PBS -k eo
-#PBS -l nodes=1:ppn=28,walltime=48:00:00
-#PBS -q long
+#PBS -l nodes=1:ppn=28,walltime=168:00:00
+#PBS -q extended
 
 # see the glove repo demo.sh for details, but the order is basically:
 # vocab_count
@@ -19,4 +19,6 @@ mkdir -p "$CUSTOM_GLOVE"
 
 cd "$WORKING_DIR"
 
+echo "Start build-vocab.pbs at $(date)"
 cat "$WORKING_DIR/corpus.txt" | vocab_count -verbose 2 -min-count 10 > "$CUSTOM_GLOVE/vocab.txt"
+echo "End build-vocab.pbs at $(date)"

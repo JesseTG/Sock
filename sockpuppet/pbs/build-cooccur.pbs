@@ -19,4 +19,6 @@ mkdir -p "$CUSTOM_GLOVE"
 
 cd "$WORKING_DIR"
 
+echo "Start build-cooccur.pbs at $(date)"
 cooccur -memory 120.0 -vocab-file "$CUSTOM_GLOVE/vocab.txt" < "$WORKING_DIR/corpus.txt" > "$CUSTOM_GLOVE/cooccurrences.bin"
+echo "End build-cooccur.pbs at $(date)"

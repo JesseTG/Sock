@@ -21,6 +21,7 @@ mkdir -p "$CUSTOM_GLOVE"
 
 cd "$WORKING_DIR"
 
+echo "Start build-glove.pbs at $(date)"
 glove \
     -input-file "$CUSTOM_GLOVE/cooccurrences.shuf.bin" \
     -vocab-file "$CUSTOM_GLOVE/vocab.txt" \
@@ -28,3 +29,5 @@ glove \
     -gradsq-file "$CUSTOM_GLOVE/gradsq" \
     -vector-size 100 \
     -threads $(nproc)
+
+echo "End build-glove.pbs at $(date)"

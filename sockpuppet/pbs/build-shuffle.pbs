@@ -19,4 +19,6 @@ mkdir -p "$CUSTOM_GLOVE"
 
 cd "$WORKING_DIR"
 
+echo "Start build-shuffle.pbs at $(date)"
 shuffle -memory 100.0 < "$CUSTOM_GLOVE/cooccurrences.bin" > "$CUSTOM_GLOVE/cooccurrences.shuf.bin"
+echo "End build-shuffle.pbs at $(date)"
