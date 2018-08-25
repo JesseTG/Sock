@@ -60,14 +60,14 @@ echo -e "\t$(date) Done building corpus, available in $CUSTOM_GLOVE_DIR/corpus.t
 ###############################################################################
 ## Counting vocabulary occurrences
 ###############################################################################
-MIN_COUNT=10
+MAX_VOCAB=3000000
 
 echo -e "\t$(date) Counting word appearences in corpus"
-echo -e "\t\t-min-count = $MIN_COUNT appearences"
+echo -e "\t\t-max-vocab = $MAX_VOCAB words"
 
 vocab_count \
     -verbose 2 \
-    -min-count "$MIN_COUNT" \
+    -max-vocab "$MAX_VOCAB" \
     < "$CUSTOM_GLOVE_DIR/corpus.txt" \
     > "$CUSTOM_GLOVE_DIR/vocab.txt"
 
