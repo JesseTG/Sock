@@ -153,7 +153,7 @@ mv "$CUSTOM_GLOVE_DIR/glove.txt~" "$CUSTOM_GLOVE_DIR/glove.txt"
 
 echo -e "\t$(date) Compressing GloVe model"
 
-xz -9 --extreme --stdout --threads=0 "$CUSTOM_GLOVE_DIR/glove.txt" > "$CUSTOM_GLOVE_DIR/glove.xz"
+xz -9 --extreme --stdout --threads=0 -vv "$CUSTOM_GLOVE_DIR/glove.txt" > "$CUSTOM_GLOVE_DIR/glove.xz"
 
 echo -e "\t$(date) Done compressing GloVe model, available in $CUSTOM_GLOVE_DIR/glove.xz"
 
