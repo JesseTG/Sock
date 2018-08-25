@@ -9,7 +9,7 @@ import torch
 from torch import Tensor
 from torch.utils.data.dataset import Dataset
 
-from sockpuppet.model.embedding import WordEmbeddings
+from sockpuppet.model.data import WordEmbeddings
 from .common import _to_int
 
 TWEET_COLUMN_TYPES = {

@@ -1,8 +1,7 @@
 import pytest
 import torch
 from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.embedding import WordEmbeddings
-from sockpuppet.model.dataset import sentence_label_pad, sentence_pad
+from sockpuppet.model.data import sentence_label_pad, sentence_pad, WordEmbeddings
 
 from tests.marks import *
 

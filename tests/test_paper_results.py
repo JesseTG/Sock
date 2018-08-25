@@ -13,10 +13,9 @@ from ignite.engine import Events, Engine, State
 from ignite.handlers import EarlyStopping
 from ignite.metrics import Loss, BinaryAccuracy, Precision, Recall
 from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
 from sockpuppet.model.dataset import CresciTensorTweetDataset, NbcTweetTensorDataset, Five38TweetTensorDataset
-from sockpuppet.model.dataset import sentence_pad, sentence_label_pad
+from sockpuppet.model.data import sentence_pad, sentence_label_pad, WordEmbeddings
 from sockpuppet.utils import split_integers
 from tests.marks import *
 

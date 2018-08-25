@@ -24,12 +24,11 @@ import cpuinfo
 from sockpuppet.app import create_app
 from sockpuppet.database import db as _db
 from sockpuppet.settings import TestConfig
-from sockpuppet.model.embedding import WordEmbeddings
-from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
+from sockpuppet.model.data import WordEmbeddings, tokenize
+from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.dataset.cresci import CresciTweetDataset, CresciUserDataset, CresciTensorTweetDataset
 from sockpuppet.model.dataset.nbc import NbcTweetDataset, NbcTweetTensorDataset
 from sockpuppet.model.dataset.five38 import Five38TweetDataset, Five38TweetTensorDataset
-from sockpuppet.model.dataset.twitter_tokenize import tokenize
 from .marks import *
 
 FIVE38_TWEET_PATH = f"{TestConfig.TRAINING_DATA_PATH}/538/tweets.csv"

@@ -7,8 +7,7 @@ from torch.nn import functional
 from torch.nn.utils.rnn import PackedSequence, pack_sequence, pad_sequence, pad_packed_sequence, pack_padded_sequence
 from torch import Tensor, LongTensor
 
-from sockpuppet.model.dataset import PaddedSequence
-from sockpuppet.model.embedding import WordEmbeddings
+from sockpuppet.model.data import WordEmbeddings
 
 
 class ContextualLSTM(nn.Module):

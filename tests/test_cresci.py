@@ -1,8 +1,7 @@
 import pytest
 import torch
 from sockpuppet.model.dataset.cresci import CresciTweetDataset, CresciUserDataset, CresciTensorTweetDataset
-from sockpuppet.model.dataset.twitter_tokenize import tokenize
-from sockpuppet.model.embedding import WordEmbeddings
+from sockpuppet.model.data import tokenize, WordEmbeddings
 
 from .marks import *
 

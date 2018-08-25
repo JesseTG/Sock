@@ -12,9 +12,9 @@ from torch.utils.data import DataLoader, Dataset, TensorDataset
 from torch.nn.utils.rnn import pad_sequence
 from ignite.engine import Events, Engine
 import ignite.metrics
-from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
-from sockpuppet.model.embedding import WordEmbeddings
-from sockpuppet.model.dataset import LabelDataset, sentence_label_pad
+from sockpuppet.model.nn import ContextualLSTM
+from sockpuppet.model.data import WordEmbeddings, sentence_label_pad
+from sockpuppet.model.dataset import LabelDataset
 from tests.marks import *
 
 BATCH_SIZES = [100, 250, 500, 1000]

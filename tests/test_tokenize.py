@@ -1,5 +1,5 @@
 import pytest
-from sockpuppet.model.dataset.twitter_tokenize import tokenize
+from sockpuppet.model.data import tokenize
 
 
 @pytest.mark.parametrize("input,expected", [

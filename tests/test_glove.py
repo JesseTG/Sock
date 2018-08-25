@@ -2,7 +2,7 @@ import pytest
 import torch
 from pandas import DataFrame
 from torch.nn import Embedding
-from sockpuppet.model.embedding import WordEmbeddings
+from sockpuppet.model.data import WordEmbeddings
 
 
 from tests.marks import *
