@@ -139,4 +139,24 @@ echo -e "\t$(date) Done training GloVe model, available in $CUSTOM_GLOVE_DIR/glo
 
 #------------------------------------------------------------------------------
 
+###############################################################################
+## Post-processing the GloVe model
+###############################################################################
+
+echo -e "\t$(date) Prepending <pad> and <unknown> to GloVe model"
+
+python3 -c "print('<pad>', *([0.0] * $VECTOR_SIZE))" >> "$CUSTOM_GLOVE_DIR/glove.txt~"
+python3 -c "print('<unknown>', *([0.0] * $VECTOR_SIZE))" >> "$CUSTOM_GLOVE_DIR/glove.txt~"
+cat "$CUSTOM_GLOVE_DIR/glove.txt" >> "$CUSTOM_GLOVE_DIR/glove.txt~"
+
+mv "$CUSTOM_GLOVE_DIR/glove.txt~" "$CUSTOM_GLOVE_DIR/glove.txt"
+
+echo -e "\t$(date) Compressing GloVe model"
+
+xz -9 --extreme --stdout --threads=0 "$CUSTOM_GLOVE_DIR/glove.txt" > "$CUSTOM_GLOVE_DIR/glove.xz"
+
+echo -e "\t$(date) Done compressing GloVe model, available in $CUSTOM_GLOVE_DIR/glove.xz"
+
+#------------------------------------------------------------------------------
+
 echo "$(date) Done building custom GloVe model"
