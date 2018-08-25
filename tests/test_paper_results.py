@@ -15,7 +15,7 @@ from ignite.metrics import Loss, BinaryAccuracy, Precision, Recall
 from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
-from sockpuppet.model.dataset.cresci import CresciTensorTweetDataset
+from sockpuppet.model.dataset import CresciTensorTweetDataset, NbcTweetTensorDataset, Five38TweetTensorDataset
 from sockpuppet.model.dataset import sentence_pad, sentence_label_pad
 from sockpuppet.utils import split_integers
 from tests.marks import *
@@ -30,7 +30,8 @@ TRAINING_SPLIT = 0.4
 VALIDATION_SPLIT = 0.1
 TESTING_SPLIT = 0.5
 TRAINER_PATIENCE = 100
-
+METRIC_THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90, 0.95)
+METRICS = ("accuracy", "precision", "recall")
 
 Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
 Metrics = namedtuple("Metrics", ("accuracy", "loss", "precision", "recall"))
@@ -190,60 +191,57 @@ def trained_model(trainer_engine: Engine, evaluator: Engine, training_data: Data
     return trainer_engine
 
 
-@modes("cuda", "dp")
-def test_accuracy_training_set(trained_model: Engine):
-    assert trained_model.state.training_metrics.accuracy[-1] >= 0.50
-    assert trained_model.state.training_metrics.accuracy[-1] >= 0.60
-    assert trained_model.state.training_metrics.accuracy[-1] >= 0.70
-    assert trained_model.state.training_metrics.accuracy[-1] >= 0.80
-    assert trained_model.state.training_metrics.accuracy[-1] >= 0.90
-    assert trained_model.state.training_metrics.accuracy[-1] >= 0.95
+@pytest.fixture(scope="module")
+def testing_metrics(evaluator: Engine, testing_data: DataLoader):
+    return evaluator.run(testing_data).metrics
+
+
+@pytest.fixture(scope="module")
+def nbc_metrics(evaluator: Engine, nbc_tweets_tensors: NbcTweetTensorDataset):
+    nbc_data = SingleLabelDataset(nbc_tweets_tensors, BOT)
+    nbc_loader = DataLoader(dataset=nbc_data, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
+    return evaluator.run(nbc_loader).metrics
+
+
+@pytest.fixture(scope="module")
+def five38_metrics(evaluator: Engine, five38_tweets_tensors: Five38TweetTensorDataset):
+    five38_data = SingleLabelDataset(five38_tweets_tensors, BOT)
+    five38_loader = DataLoader(dataset=five38_data, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
+    return evaluator.run(five38_loader).metrics
 
 
 @modes("cuda", "dp")
-def test_precision_training_set(trained_model: Engine):
-    assert trained_model.state.training_metrics.precision[-1] >= 0.50
-    assert trained_model.state.training_metrics.precision[-1] >= 0.60
-    assert trained_model.state.training_metrics.precision[-1] >= 0.70
-    assert trained_model.state.training_metrics.precision[-1] >= 0.80
-    assert trained_model.state.training_metrics.precision[-1] >= 0.90
+@pytest.mark.parametrize("metric", METRICS)
+@pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
+def test_metrics_training_set(trained_model: Engine, threshold: float, metric: str):
+    m = getattr(trained_model.state.training_metrics, metric)
+    assert m[-1] >= threshold
 
 
 @modes("cuda", "dp")
-def test_recall_training_set(trained_model: Engine):
-    assert trained_model.state.training_metrics.recall[-1] >= 0.50
-    assert trained_model.state.training_metrics.recall[-1] >= 0.60
-    assert trained_model.state.training_metrics.recall[-1] >= 0.70
-    assert trained_model.state.training_metrics.recall[-1] >= 0.80
-    assert trained_model.state.training_metrics.recall[-1] >= 0.90
+@pytest.mark.parametrize("metric", METRICS)
+@pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
+def test_metrics_validation_set(trained_model: Engine, threshold: float, metric: str):
+    m = getattr(trained_model.state.validation_metrics, metric)
+    assert m[-1] >= threshold
 
 
 @modes("cuda", "dp")
-def test_accuracy_validation_set(trained_model: Engine):
-    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.50
-    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.60
-    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.70
-    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.80
-    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.90
-    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.95
+@pytest.mark.parametrize("metric", METRICS)
+@pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
+def test_metrics_testing_set(testing_metrics: dict, threshold: float, metric: str):
+    assert testing_metrics[metric] >= threshold
 
 
 @modes("cuda", "dp")
-def test_precision_validation_set(trained_model: Engine):
-    assert trained_model.state.validation_metrics.precision[-1] >= 0.50
-    assert trained_model.state.validation_metrics.precision[-1] >= 0.60
-    assert trained_model.state.validation_metrics.precision[-1] >= 0.70
-    assert trained_model.state.validation_metrics.precision[-1] >= 0.80
-    assert trained_model.state.validation_metrics.precision[-1] >= 0.90
+@pytest.mark.parametrize("metric", METRICS)
+@pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
+def test_metrics_nbc(nbc_metrics: dict, threshold: float, metric: str):
+    assert nbc_metrics[metric] >= threshold
 
 
 @modes("cuda", "dp")
-def test_recall_validation_set(trained_model: Engine):
-    assert trained_model.state.validation_metrics.recall[-1] >= 0.50
-    assert trained_model.state.validation_metrics.recall[-1] >= 0.60
-    assert trained_model.state.validation_metrics.recall[-1] >= 0.70
-    assert trained_model.state.validation_metrics.recall[-1] >= 0.80
-    assert trained_model.state.validation_metrics.recall[-1] >= 0.90
-
-
-# TODO: Check the metrics on the testing set
+@pytest.mark.parametrize("metric", METRICS)
+@pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
+def test_metrics_538(five38_metrics: dict, threshold: float, metric: str):
+    assert five38_metrics[metric] >= threshold
