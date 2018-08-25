@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import Callable, Sequence
+from typing import Callable, Sequence, Dict
 import time
 
 import pytest
@@ -168,13 +168,13 @@ def trained_model(trainer_engine: Engine, evaluator: Engine, training_data: Data
 
     @trainer_engine.on(Events.EPOCH_COMPLETED)
     def validate(trainer_engine: Engine):
-        training_metrics = evaluator.run(training_data).metrics  # type: dict
+        training_metrics = evaluator.run(training_data).metrics  # type: Dict[str, float]
         trainer_engine.state.training_metrics.loss.append(training_metrics["loss"])
         trainer_engine.state.training_metrics.accuracy.append(training_metrics["accuracy"])
         trainer_engine.state.training_metrics.recall.append(training_metrics["recall"])
         trainer_engine.state.training_metrics.precision.append(training_metrics["precision"])
 
-        validation_metrics = evaluator.run(validation_data).metrics  # type: dict
+        validation_metrics = evaluator.run(validation_data).metrics  # type: Dict[str, float]
         trainer_engine.state.validation_metrics.loss.append(validation_metrics["loss"])
         trainer_engine.state.validation_metrics.accuracy.append(validation_metrics["accuracy"])
         trainer_engine.state.validation_metrics.recall.append(validation_metrics["recall"])
@@ -229,14 +229,14 @@ def test_metrics_validation_set(trained_model: Engine, threshold: float, metric:
 @modes("cuda", "dp")
 @pytest.mark.parametrize("metric", METRICS)
 @pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
-def test_metrics_testing_set(testing_metrics: dict, threshold: float, metric: str):
+def test_metrics_testing_set(testing_metrics: Dict[str, float], threshold: float, metric: str):
     assert testing_metrics[metric] >= threshold
 
 
 @modes("cuda", "dp")
 @pytest.mark.parametrize("metric", METRICS)
 @pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
-def test_metrics_nbc(nbc_metrics: dict, threshold: float, metric: str):
+def test_metrics_nbc(nbc_metrics: Dict[str, float], threshold: float, metric: str):
     assert nbc_metrics[metric] >= threshold
 
 
