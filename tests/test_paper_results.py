@@ -179,6 +179,34 @@ def trained_model(trainer: Engine, evaluator: Engine, training_data: DataLoader,
 
 
 @modes("cuda", "dp")
+def test_accuracy_training_set(trained_model: Engine):
+    assert trained_model.state.training_metrics.accuracy[-1] >= 0.50
+    assert trained_model.state.training_metrics.accuracy[-1] >= 0.60
+    assert trained_model.state.training_metrics.accuracy[-1] >= 0.70
+    assert trained_model.state.training_metrics.accuracy[-1] >= 0.80
+    assert trained_model.state.training_metrics.accuracy[-1] >= 0.90
+    assert trained_model.state.training_metrics.accuracy[-1] >= 0.95
+
+
+@modes("cuda", "dp")
+def test_precision_training_set(trained_model: Engine):
+    assert trained_model.state.training_metrics.precision[-1] >= 0.50
+    assert trained_model.state.training_metrics.precision[-1] >= 0.60
+    assert trained_model.state.training_metrics.precision[-1] >= 0.70
+    assert trained_model.state.training_metrics.precision[-1] >= 0.80
+    assert trained_model.state.training_metrics.precision[-1] >= 0.90
+
+
+@modes("cuda", "dp")
+def test_recall_training_set(trained_model: Engine):
+    assert trained_model.state.training_metrics.recall[-1] >= 0.50
+    assert trained_model.state.training_metrics.recall[-1] >= 0.60
+    assert trained_model.state.training_metrics.recall[-1] >= 0.70
+    assert trained_model.state.training_metrics.recall[-1] >= 0.80
+    assert trained_model.state.training_metrics.recall[-1] >= 0.90
+
+
+@modes("cuda", "dp")
 def test_accuracy_validation_set(trained_model: Engine):
     assert trained_model.state.validation_metrics.accuracy[-1] >= 0.50
     assert trained_model.state.validation_metrics.accuracy[-1] >= 0.60
@@ -204,5 +232,6 @@ def test_recall_validation_set(trained_model: Engine):
     assert trained_model.state.validation_metrics.recall[-1] >= 0.70
     assert trained_model.state.validation_metrics.recall[-1] >= 0.80
     assert trained_model.state.validation_metrics.recall[-1] >= 0.90
+
 
 # TODO: Check the metrics on the testing set
