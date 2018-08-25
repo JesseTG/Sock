@@ -7,7 +7,7 @@ import torch
 import ignite
 
 from torch import Tensor, LongTensor
-from torch.nn import Module
+from torch.nn import Module, DataParallel
 from torch.utils.data import DataLoader, Dataset, TensorDataset, ConcatDataset, RandomSampler, random_split
 from ignite.engine import Events, Engine, State
 from ignite.handlers import EarlyStopping
@@ -121,9 +121,14 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 
 
 @pytest.fixture(scope="module")
-def trainer_engine(make_trainer, device: torch.device, lstm: Module):
+def trainer_engine(make_trainer, device: torch.device, mode: str, glove_embedding: WordEmbeddings):
     # I can't be bothered to figure out how fixture overriding works
-    return make_trainer(device, lstm)
+
+    lstm = ContextualLSTM(glove_embedding, device=device)
+    if mode == 'dp':
+        return make_trainer(device, DataParallel(lstm))
+    else:
+        return make_trainer(device, lstm)
 
 
 @pytest.fixture(scope="module")
