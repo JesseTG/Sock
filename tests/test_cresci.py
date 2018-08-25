@@ -49,13 +49,12 @@ def test_bench_cresci_tensor_tweet_cached_access(benchmark, cresci_genuine_accou
 
 @modes("cpu", "cuda")
 @pytest.mark.benchmark(group="cresci_tensor_tweet_fresh_access")
-def test_bench_cresci_tensor_tweet_fresh_access(benchmark, cresci_genuine_accounts_tweets: CresciTweetDataset, glove_embedding: WordEmbeddings, device: torch.device):
+def test_bench_cresci_tensor_tweet_fresh_access(benchmark, cresci_genuine_accounts_tweets: CresciTweetDataset, glove_embedding: WordEmbeddings):
     # TODO: Make this benchmark run a different set of indices for each iteration
     dataset = CresciTensorTweetDataset(
         data_source=cresci_genuine_accounts_tweets,
         embeddings=glove_embedding,
-        tokenizer=tokenize,
-        device=device
+        tokenizer=tokenize
     )
 
     def access():
