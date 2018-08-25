@@ -120,7 +120,7 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 
 
 @pytest.fixture
-def evaluator(trainer: Engine):
+def evaluator(trainer: Engine, device: torch.device):
     def tf(y):
         # TODO: Move to general utility function elsewhere
         return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
