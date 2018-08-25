@@ -10,7 +10,7 @@ from torch import Tensor
 from torch.utils.data.dataset import Dataset
 
 from sockpuppet.model.data import WordEmbeddings
-from .common import _to_int
+from .common import _to_int, TweetTensorDataset
 
 TWEET_COLUMN_TYPES = {
     "content": str,
@@ -49,5 +49,5 @@ class Five38TweetDataset(Dataset):
         return self.data.loc[index]
 
 
-class Five38TweetTensorDataset(Dataset):
+class Five38TweetTensorDataset(TweetTensorDataset):
     pass
