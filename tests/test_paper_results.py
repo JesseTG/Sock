@@ -121,6 +121,19 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 
 @pytest.fixture
 def evaluator(trainer: Engine):
+    def tf(y):
+        # TODO: Move to general utility function elsewhere
+        return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
+
+    mapping = torch.tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
+
+    def tf_2class(output):
+        y_pred, y = output
+
+        y_pred = mapping.index_select(0, y_pred.round().to(torch.long))
+
+        return (y_pred, y.to(torch.long))
+
     return ignite.engine.create_supervised_evaluator(
         trainer.state.model,
         metrics={
@@ -134,18 +147,6 @@ def evaluator(trainer: Engine):
 
 @pytest.fixture()
 def trained_model(trainer: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
-    def tf(y):
-        # TODO: Move to general utility function elsewhere
-        return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
-
-    mapping = torch.tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
-
-    def tf_2class(output):
-        y_pred, y = output
-
-        y_pred = mapping.index_select(0, y_pred.round().to(torch.long))
-
-        return (y_pred, y.to(torch.long))
 
     @trainer.on(Events.STARTED)
     def init_metrics(trainer: Engine):
