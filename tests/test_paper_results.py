@@ -121,12 +121,12 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 
 
 @pytest.fixture(scope="module")
-def trainer(make_trainer, device: torch.device, lstm: Module):
+def trainer_engine(make_trainer, device: torch.device, lstm: Module):
     return make_trainer(device, lstm)
 
 
 @pytest.fixture
-def evaluator(trainer: Engine, device: torch.device):
+def evaluator(trainer_engine: Engine, device: torch.device):
     def tf(y):
         # TODO: Move to general utility function elsewhere
         return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
@@ -141,9 +141,9 @@ def evaluator(trainer: Engine, device: torch.device):
         return (y_pred, y.to(torch.long))
 
     return ignite.engine.create_supervised_evaluator(
-        trainer.state.model,
+        trainer_engine.state.model,
         metrics={
-            "loss": Loss(trainer.state.criterion, output_transform=tf),
+            "loss": Loss(trainer_engine.state.criterion, output_transform=tf),
             "accuracy": BinaryAccuracy(output_transform=tf),
             "recall": Recall(average=True, output_transform=tf_2class),
             "precision": Precision(average=True, output_transform=tf_2class),
@@ -152,36 +152,36 @@ def evaluator(trainer: Engine, device: torch.device):
 
 
 @pytest.fixture(scope="module")
-def trained_model(trainer: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
+def trained_model(trainer_engine: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
 
-    @trainer.on(Events.STARTED)
-    def init_metrics(trainer: Engine):
-        trainer.state.training_metrics = Metrics([], [], [], [])
-        trainer.state.validation_metrics = Metrics([], [], [], [])
+    @trainer_engine.on(Events.STARTED)
+    def init_metrics(trainer_engine: Engine):
+        trainer_engine.state.training_metrics = Metrics([], [], [], [])
+        trainer_engine.state.validation_metrics = Metrics([], [], [], [])
 
-    @trainer.on(Events.EPOCH_COMPLETED)
-    def validate(trainer: Engine):
+    @trainer_engine.on(Events.EPOCH_COMPLETED)
+    def validate(trainer_engine: Engine):
         training_metrics = evaluator.run(training_data).metrics  # type: dict
-        trainer.state.training_metrics.loss.append(training_metrics["loss"])
-        trainer.state.training_metrics.accuracy.append(training_metrics["accuracy"])
-        trainer.state.training_metrics.recall.append(training_metrics["recall"])
-        trainer.state.training_metrics.precision.append(training_metrics["precision"])
+        trainer_engine.state.training_metrics.loss.append(training_metrics["loss"])
+        trainer_engine.state.training_metrics.accuracy.append(training_metrics["accuracy"])
+        trainer_engine.state.training_metrics.recall.append(training_metrics["recall"])
+        trainer_engine.state.training_metrics.precision.append(training_metrics["precision"])
 
         validation_metrics = evaluator.run(validation_data).metrics  # type: dict
-        trainer.state.validation_metrics.loss.append(validation_metrics["loss"])
-        trainer.state.validation_metrics.accuracy.append(validation_metrics["accuracy"])
-        trainer.state.validation_metrics.recall.append(validation_metrics["recall"])
-        trainer.state.validation_metrics.precision.append(validation_metrics["precision"])
+        trainer_engine.state.validation_metrics.loss.append(validation_metrics["loss"])
+        trainer_engine.state.validation_metrics.accuracy.append(validation_metrics["accuracy"])
+        trainer_engine.state.validation_metrics.recall.append(validation_metrics["recall"])
+        trainer_engine.state.validation_metrics.precision.append(validation_metrics["precision"])
 
-    def score_function(trainer: Engine) -> float:
-        return -trainer.state.validation_metrics.loss[-1]
+    def score_function(trainer_engine: Engine) -> float:
+        return -trainer_engine.state.validation_metrics.loss[-1]
 
-    handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer)
-    trainer.add_event_handler(Events.EPOCH_COMPLETED, handler)
+    handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer_engine)
+    trainer_engine.add_event_handler(Events.EPOCH_COMPLETED, handler)
 
-    trainer.run(training_data, max_epochs=MAX_EPOCHS)
+    trainer_engine.run(training_data, max_epochs=MAX_EPOCHS)
 
-    return trainer
+    return trainer_engine
 
 
 @modes("cuda", "dp")
