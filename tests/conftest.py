@@ -25,9 +25,11 @@ from sockpuppet.settings import TestConfig
 from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.dataset.cresci import CresciTweetDataset, CresciUserDataset, CresciTensorTweetDataset
+from sockpuppet.model.dataset.nbc import NbcTweetDataset, NbcTweetTensorDataset
 from sockpuppet.model.dataset.twitter_tokenize import tokenize
 from .marks import *
 
+NBC_TWEET_PATH = f"{TestConfig.TRAINING_DATA_PATH}/nbc/tweets.csv"
 CRESCI_PATH = f"{TestConfig.TRAINING_DATA_PATH}/cresci-2017/datasets_full.csv"
 GENUINE_ACCOUNT_TWEET_PATH = f"{CRESCI_PATH}/genuine_accounts.csv/tweets.csv"
 GENUINE_ACCOUNT_USER_PATH = f"{CRESCI_PATH}/genuine_accounts.csv/users.csv"
@@ -173,6 +175,12 @@ def glove_embedding_cuda(glove_data: DataFrame):
     return WordEmbeddings(glove_data, 25, "cuda")
 
 
+@pytest.fixture(scope="session")
+def glove_embedding_dp(glove_embedding_cuda: WordEmbeddings):
+    """Load the GloVe embeddings onto CUDA memory."""
+    return glove_embedding_cuda
+
+
 @pytest.fixture(scope="function")
 def lstm(request, mode: str):
     '''Creates a ContextualLSTM of either CPU or CUDA type'''
@@ -201,6 +209,41 @@ def lstm_dp(lstm_cuda: ContextualLSTM):
 def cresci_genuine_accounts_tweets():
     """Load genuine_accounts/tweets.csv from cresci-2017"""
     return CresciTweetDataset(GENUINE_ACCOUNT_TWEET_PATH)
+
+###############################################################################
+# NBC tweets
+###############################################################################
+
+
+@pytest.fixture(scope="session")
+def nbc_tweets():
+    """Load the tweets revealed by NBC"""
+    return NbcTweetDataset(NBC_TWEET_PATH)
+
+
+@pytest.fixture(scope="session")
+def nbc_tweets_tensors(request, device: torch.device):
+    return request.getfixturevalue(f"nbc_tweets_tensors_{device.type}")
+
+
+@pytest.fixture(scope="session")
+def nbc_tweets_tensors_cpu(nbc_tweets: NbcTweetDataset, glove_embedding_cpu: WordEmbeddings):
+    return NbcTweetTensorDataset(
+        data_source=nbc_tweets,
+        embeddings=glove_embedding_cpu,
+        tokenizer=tokenize
+    )
+
+
+@pytest.fixture(scope="session")
+def nbc_tweets_tensors_cuda(nbc_tweets: NbcTweetDataset, glove_embedding_cuda: WordEmbeddings):
+    return NbcTweetTensorDataset(
+        data_source=nbc_tweets,
+        embeddings=glove_embedding_cuda,
+        tokenizer=tokenize
+    )
+
+###############################################################################
 
 
 @pytest.fixture(scope="session")
@@ -231,8 +274,7 @@ def cresci_genuine_accounts_tweets_tensors_cpu(cresci_genuine_accounts_tweets, g
     return CresciTensorTweetDataset(
         data_source=cresci_genuine_accounts_tweets,
         embeddings=glove_embedding_cpu,
-        tokenizer=tokenize,
-        device="cpu"
+        tokenizer=tokenize
     )
 
 
@@ -241,8 +283,7 @@ def cresci_genuine_accounts_tweets_tensors_cuda(cresci_genuine_accounts_tweets, 
     return CresciTensorTweetDataset(
         data_source=cresci_genuine_accounts_tweets,
         embeddings=glove_embedding_cuda,
-        tokenizer=tokenize,
-        device="cuda"
+        tokenizer=tokenize
     )
 
 
@@ -256,8 +297,7 @@ def cresci_social_spambots_1_tweets_tensors_cpu(cresci_social_spambots_1_tweets,
     return CresciTensorTweetDataset(
         data_source=cresci_social_spambots_1_tweets,
         embeddings=glove_embedding_cpu,
-        tokenizer=tokenize,
-        device="cpu"
+        tokenizer=tokenize
     )
 
 
@@ -266,8 +306,7 @@ def cresci_social_spambots_1_tweets_tensors_cuda(cresci_social_spambots_1_tweets
     return CresciTensorTweetDataset(
         data_source=cresci_social_spambots_1_tweets,
         embeddings=glove_embedding_cuda,
-        tokenizer=tokenize,
-        device="cuda"
+        tokenizer=tokenize
     )
 
 

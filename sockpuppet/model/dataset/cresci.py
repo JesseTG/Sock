@@ -10,13 +10,7 @@ from torch import Tensor
 from torch.utils.data.dataset import Dataset
 
 from sockpuppet.model.embedding import WordEmbeddings
-
-
-def _to_int(i):
-    if i in ("", "NULL"):
-        return 0
-    else:
-        return int(i)
+from .common import TweetDataset, TweetTensorDataset, _to_int
 
 TWEET_COLUMN_TYPES = {
     "text": str,
@@ -27,6 +21,8 @@ TWEET_COLUMN_TYPES = {
     "num_urls": int,
     "num_mentions": int,
 }
+
+TWEET_COLUMN_NAMES = tuple(TWEET_COLUMN_TYPES.keys())
 
 USER_COLUMN_TYPES = {
     "statuses_count": int,
@@ -39,16 +35,15 @@ USER_COLUMN_TYPES = {
     "protected": bool,
     "verified": bool
 }
-# TODO: Go to the official Twitter docs to see what the exact types of these fields should be
 
 
-class CresciTweetDataset(Dataset):
+class CresciTweetDataset(TweetDataset):
     def __init__(self, path: str):
         self.data = pandas.read_csv(
             path,
             dtype=TWEET_COLUMN_TYPES,
             engine="c",
-            usecols=tuple(TWEET_COLUMN_TYPES.keys()),
+            usecols=TWEET_COLUMN_NAMES,
             encoding="utf8",
             header=0,
             memory_map=True,
@@ -67,35 +62,8 @@ class CresciTweetDataset(Dataset):
         return self.data.loc[index]
 
 
-class CresciTensorTweetDataset(Dataset):
-    def __init__(
-        self,
-        data_source: CresciTweetDataset,
-        tokenizer: Callable[[str], Sequence[str]],
-        embeddings: WordEmbeddings,
-        device: Union[str, torch.device]="cpu"
-    ):
-        # TODO: Consider supporting reading directly from a file
-        self.embeddings = embeddings
-        self.tokenizer = tokenizer
-        self.data_source = data_source
-        self.tensors = [None] * len(data_source)
-        # NOTE: Each tensor might have a different shape, as each tensor represents a tweet
-
-    @property
-    def device(self):
-        return self.embeddings.device
-
-    def __len__(self) -> int:
-        return len(self.tensors)
-
-    def __getitem__(self, index: Integral) -> Tensor:
-        if self.tensors[index] is None:
-            text = self.data_source[index].text
-            tokens = self.tokenizer(text)
-            self.tensors[index] = self.embeddings.encode(tokens)
-
-        return self.tensors[index]
+class CresciTensorTweetDataset(TweetTensorDataset):
+    pass
 
 
 class CresciUserDataset(Dataset):
