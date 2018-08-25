@@ -171,7 +171,7 @@ def trained_model(trainer: Engine, evaluator: Engine, training_data: DataLoader,
         return -trainer.state.validation_metrics["loss"]
 
     handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer)
-    evaluator.add_event_handler(Events.EPOCH_COMPLETED, handler)
+    trainer.add_event_handler(Events.EPOCH_COMPLETED, handler)
 
     trainer.run(training_data, max_epochs=MAX_EPOCHS)
 
