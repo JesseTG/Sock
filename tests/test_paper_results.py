@@ -126,7 +126,7 @@ def trainer_engine(make_trainer, device: torch.device, lstm: Module):
     return make_trainer(device, lstm)
 
 
-@pytest.fixture
+@pytest.fixture()
 def evaluator(trainer_engine: Engine, device: torch.device):
     def tf(y):
         # TODO: Move to general utility function elsewhere
