@@ -122,6 +122,7 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 
 @pytest.fixture(scope="module")
 def trainer_engine(make_trainer, device: torch.device, lstm: Module):
+    # I can't be bothered to figure out how fixture overriding works
     return make_trainer(device, lstm)
 
 
