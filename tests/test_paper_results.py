@@ -120,6 +120,11 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
     assert training_split + validation_split + testing_split == total
 
 
+@pytest.fixture(scope="module")
+def trainer(make_trainer, device: torch.device, lstm: Module):
+    return make_trainer(device, lstm)
+
+
 @pytest.fixture
 def evaluator(trainer: Engine, device: torch.device):
     def tf(y):
@@ -147,8 +152,7 @@ def evaluator(trainer: Engine, device: torch.device):
 
 
 @pytest.fixture(scope="module")
-def trained_model(make_trainer, device: torch.device, lstm: Module, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
-    trainer = make_trainer(device, lstm)  # type: Engine
+def trained_model(trainer: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
 
     @trainer.on(Events.STARTED)
     def init_metrics(trainer: Engine):
