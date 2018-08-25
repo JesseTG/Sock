@@ -310,7 +310,7 @@ def cresci_social_spambots_1_tweets_tensors_cuda(cresci_social_spambots_1_tweets
     )
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def make_trainer():
     def _make(device: torch.device, model: Module):
         model.train(True)

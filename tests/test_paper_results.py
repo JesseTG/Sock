@@ -7,6 +7,7 @@ import torch
 import ignite
 
 from torch import Tensor, LongTensor
+from torch.nn import Module
 from torch.utils.data import DataLoader, Dataset, TensorDataset, ConcatDataset, RandomSampler, random_split
 from ignite.engine import Events, Engine, State
 from ignite.handlers import EarlyStopping
@@ -146,7 +147,8 @@ def evaluator(trainer: Engine, device: torch.device):
 
 
 @pytest.fixture(scope="module")
-def trained_model(trainer: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
+def trained_model(make_trainer, device: torch.device, lstm: Module, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
+    trainer = make_trainer(device, lstm)  # type: Engine
 
     @trainer.on(Events.STARTED)
     def init_metrics(trainer: Engine):
