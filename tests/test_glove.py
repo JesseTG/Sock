@@ -86,57 +86,6 @@ def test_encode_has_correct_value(glove_embedding: WordEmbeddings):
 
 
 @modes("cpu", "cuda")
-def test_embed_from_encoding_returns_tensor(glove_embedding: WordEmbeddings):
-    tokens = "<user> it is not in my video".split()
-    encoding = glove_embedding.encode(tokens)
-    embedding = glove_embedding.embed(encoding)
-
-    assert torch.is_tensor(embedding)
-
-
-@modes("cpu", "cuda")
-def test_embed_from_encoding_has_correct_shape(glove_embedding: WordEmbeddings):
-    tokens = "<user> it is not in my video".split()
-    encoding = glove_embedding.encode(tokens)
-    embedding = glove_embedding.embed(encoding)
-
-    assert embedding.shape == torch.Size([len(tokens), len(FIRST_ROW_VECTOR)])
-
-
-@modes("cpu", "cuda")
-def test_embed_from_encoding_has_correct_value(glove_embedding: WordEmbeddings):
-    tokens = "<user> it is not in my video".split()
-    encoding = glove_embedding.encode(tokens)
-    embedding = glove_embedding.embed(encoding)
-
-    assert embedding[0].cpu().numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
-
-
-@modes("cpu", "cuda")
-def test_embed_from_tokens_returns_tensor(glove_embedding: WordEmbeddings):
-    tokens = "<user> it is not in my video".split()
-    embedding = glove_embedding.embed(tokens)
-
-    assert torch.is_tensor(embedding)
-
-
-@modes("cpu", "cuda")
-def test_embed_from_tokens_has_correct_shape(glove_embedding: WordEmbeddings):
-    tokens = "<user> it is not in my video".split()
-    embedding = glove_embedding.embed(tokens)
-
-    assert embedding.shape == torch.Size([len(tokens), len(FIRST_ROW_VECTOR)])
-
-
-@modes("cpu", "cuda")
-def test_embed_from_tokens_has_correct_value(glove_embedding: WordEmbeddings):
-    tokens = "<user> it is not in my video".split()
-    embedding = glove_embedding.embed(tokens)
-
-    assert embedding[0].cpu().numpy() == pytest.approx(FIRST_ROW_VECTOR.numpy())
-
-
-@modes("cpu", "cuda")
 def test_unknown_word_embeds_to_zero_vector(glove_embedding: WordEmbeddings):
     embedding = glove_embedding["<france>"]
 
@@ -160,9 +109,9 @@ def test_bench_encode(benchmark, glove_embedding: WordEmbeddings):
 
 
 @modes("cpu", "cuda")
-def test_embed_empty_string_to_zero(glove_embedding: WordEmbeddings):
+def test_encode_empty_string_to_zero(glove_embedding: WordEmbeddings):
     tokens = "".split()
-    embedding = glove_embedding.embed(tokens)
+    embedding = glove_embedding.encode(tokens)
 
     assert embedding[0].cpu().numpy() == pytest.approx(ZERO_VECTOR.numpy())
 

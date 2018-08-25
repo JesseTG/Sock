@@ -12,7 +12,6 @@ TORCH_INT_DTYPES = (torch.uint8, torch.int8, torch.short, torch.int, torch.long)
 
 
 class WordEmbeddings:
-    # TODO: Add support for cuda devices
     def __init__(self, path: Union[DataFrame, str], dim: int, device="cpu"):
         if isinstance(path, str):
             with open(path, "r") as file:
@@ -73,29 +72,6 @@ class WordEmbeddings:
             return torch.as_tensor([self._get_word(t) for t in tokens], dtype=torch.long, device=self.device)
         else:
             return torch.as_tensor([1], dtype=torch.long, device=self.device)
-            # TODO: Dedicate a special token <empty> and an index for it
 
     def to_layer(self) -> Embedding:
         return Embedding.from_pretrained(self.vectors)
-
-    def embed(self, encoding) -> Tensor:
-        if len(encoding) == 0:
-            # If we're embedding an empty document...
-            return torch.zeros([1, self.dim], dtype=torch.float, device=self.device)
-            # ...return the zero vector
-        elif torch.is_tensor(encoding) and encoding.dtype in TORCH_INT_DTYPES:
-            # Else if this is a tensor of indices...
-            return self.vectors.index_select(0, encoding)
-            # TODO: Can integer-based tensors besides LongTensor be used for indices?
-        elif isinstance(encoding, Sequence):
-            # Else if this is a standard Python sequence...
-            if isinstance(encoding[0], int):
-                # ...of word indices...
-                return self.vectors.index_select(0, torch.as_tensor(encoding, dtype=torch.long, device=self.device))
-            elif isinstance(encoding[0], str):
-                # ...of words...
-                return self.vectors.index_select(0, self.encode(encoding))
-            else:
-                raise TypeError(f"{type(encoding).__name__} must be made of ints or strings")
-        else:
-            raise TypeError(f"Don't know how to embed a {type(encoding).__name__}")
