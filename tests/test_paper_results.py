@@ -145,7 +145,7 @@ def evaluator(trainer: Engine, device: torch.device):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def trained_model(trainer: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
 
     @trainer.on(Events.STARTED)
