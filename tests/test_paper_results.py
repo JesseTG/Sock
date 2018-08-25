@@ -8,9 +8,9 @@ import ignite
 
 from torch import Tensor, LongTensor
 from torch.utils.data import DataLoader, Dataset, TensorDataset, ConcatDataset, RandomSampler, random_split
-from ignite.engine import Events, Engine
+from ignite.engine import Events, Engine, State
 from ignite.handlers import EarlyStopping
-import ignite.metrics
+from ignite.metrics import Loss, BinaryAccuracy, Precision, Recall
 from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
@@ -32,6 +32,7 @@ TRAINER_PATIENCE = 100
 
 
 Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
+Metrics = namedtuple("Metrics", ("accuracy", "loss", "precision", "recall"))
 
 
 @pytest.fixture(scope="module")
@@ -118,9 +119,21 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
     assert training_split + validation_split + testing_split == total
 
 
-@modes("cuda", "dp")
-@slow
-def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation_data: DataLoader, testing_data: DataLoader):
+@pytest.fixture
+def evaluator(trainer: Engine):
+    return ignite.engine.create_supervised_evaluator(
+        trainer.state.model,
+        metrics={
+            "loss": Loss(trainer.state.criterion, output_transform=tf),
+            "accuracy": BinaryAccuracy(output_transform=tf),
+            "recall": Recall(average=True, output_transform=tf_2class),
+            "precision": Precision(average=True, output_transform=tf_2class),
+        }
+    )
+
+
+@pytest.fixture()
+def trained_model(trainer: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
     def tf(y):
         # TODO: Move to general utility function elsewhere
         return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
@@ -132,58 +145,63 @@ def test_accuracy(device, trainer: Engine, training_data: DataLoader, validation
 
         y_pred = mapping.index_select(0, y_pred.round().to(torch.long))
 
-        # TODO: Recall metric isn't meant to be used for a binary class, so expand 0 to [1, 0] and 1 to [0, 1]
         return (y_pred, y.to(torch.long))
 
-    validator = ignite.engine.create_supervised_evaluator(
-        trainer.state.model,
-        metrics={
-            "loss": ignite.metrics.Loss(trainer.state.criterion, output_transform=tf),
-            "accuracy": ignite.metrics.BinaryAccuracy(output_transform=tf),
-            "recall": ignite.metrics.Recall(average=True, output_transform=tf_2class),
-            "precision": ignite.metrics.Precision(average=True, output_transform=tf_2class),
-        }
-    )
-
-    # TODO: Move this to a fixture, then have the tests be about the metrics
     @trainer.on(Events.STARTED)
     def init_metrics(trainer: Engine):
-        trainer.state.loss = []
-        trainer.state.accuracy = []
-        trainer.state.recall = []
-        trainer.state.precision = []
+        trainer.state.training_metrics = Metrics([], [], [], [])
+        trainer.state.validation_metrics = Metrics([], [], [], [])
 
     @trainer.on(Events.EPOCH_COMPLETED)
     def validate(trainer: Engine):
-        validator.run(validation_data)
-        trainer.state.loss.append(validator.state.metrics["loss"])
-        trainer.state.accuracy.append(validator.state.metrics["accuracy"])
-        trainer.state.recall.append(validator.state.metrics["recall"])
-        trainer.state.precision.append(validator.state.metrics["precision"])
+        training_metrics = evaluator.run(training_data).metrics  # type: dict
+        trainer.state.training_metrics.loss.append(training_metrics["loss"])
+        trainer.state.training_metrics.accuracy.append(training_metrics["accuracy"])
+        trainer.state.training_metrics.recall.append(training_metrics["recall"])
+        trainer.state.training_metrics.precision.append(training_metrics["precision"])
+
+        validation_metrics = evaluator.run(validation_data).metrics  # type: dict
+        trainer.state.validation_metrics.loss.append(validation_metrics["loss"])
+        trainer.state.validation_metrics.accuracy.append(validation_metrics["accuracy"])
+        trainer.state.validation_metrics.recall.append(validation_metrics["recall"])
+        trainer.state.validation_metrics.precision.append(validation_metrics["precision"])
 
     def score_function(trainer: Engine) -> float:
-        return -trainer.state.metrics["loss"]
+        return -trainer.state.validation_metrics["loss"]
 
     handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer)
-    validator.add_event_handler(Events.EPOCH_COMPLETED, handler)
+    evaluator.add_event_handler(Events.EPOCH_COMPLETED, handler)
 
     trainer.run(training_data, max_epochs=MAX_EPOCHS)
 
-    assert trainer.state.accuracy[-1] >= 0.50
-    assert trainer.state.accuracy[-1] >= 0.60
-    assert trainer.state.accuracy[-1] >= 0.70
-    assert trainer.state.accuracy[-1] >= 0.80
-    assert trainer.state.accuracy[-1] >= 0.90
-    assert trainer.state.accuracy[-1] >= 0.95
+    return trainer
 
-    assert trainer.state.precision[-1] >= 0.50
-    assert trainer.state.precision[-1] >= 0.60
-    assert trainer.state.precision[-1] >= 0.70
-    assert trainer.state.precision[-1] >= 0.80
-    assert trainer.state.precision[-1] >= 0.90
 
-    assert trainer.state.recall[-1] >= 0.50
-    assert trainer.state.recall[-1] >= 0.60
-    assert trainer.state.recall[-1] >= 0.70
-    assert trainer.state.recall[-1] >= 0.80
-    assert trainer.state.recall[-1] >= 0.90
+@modes("cuda", "dp")
+def test_accuracy_validation_set(trained_model: Engine):
+    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.50
+    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.60
+    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.70
+    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.80
+    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.90
+    assert trained_model.state.validation_metrics.accuracy[-1] >= 0.95
+
+
+@modes("cuda", "dp")
+def test_precision_validation_set(trained_model: Engine):
+    assert trained_model.state.validation_metrics.precision[-1] >= 0.50
+    assert trained_model.state.validation_metrics.precision[-1] >= 0.60
+    assert trained_model.state.validation_metrics.precision[-1] >= 0.70
+    assert trained_model.state.validation_metrics.precision[-1] >= 0.80
+    assert trained_model.state.validation_metrics.precision[-1] >= 0.90
+
+
+@modes("cuda", "dp")
+def test_recall_validation_set(trained_model: Engine):
+    assert trained_model.state.validation_metrics.recall[-1] >= 0.50
+    assert trained_model.state.validation_metrics.recall[-1] >= 0.60
+    assert trained_model.state.validation_metrics.recall[-1] >= 0.70
+    assert trained_model.state.validation_metrics.recall[-1] >= 0.80
+    assert trained_model.state.validation_metrics.recall[-1] >= 0.90
+
+# TODO: Check the metrics on the testing set
