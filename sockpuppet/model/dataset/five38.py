@@ -13,7 +13,7 @@ from sockpuppet.model.embedding import WordEmbeddings
 from .common import _to_int
 
 TWEET_COLUMN_TYPES = {
-    "text": str,
+    "content": str,
     # "retweet_count": int, TODO: Support
     # "reply_count": int, TODO: Support
     # "favorite_count": int, TODO: Support
