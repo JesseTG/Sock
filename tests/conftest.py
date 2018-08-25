@@ -26,9 +26,11 @@ from sockpuppet.model.embedding import WordEmbeddings
 from sockpuppet.model.nn.ContextualLSTM import ContextualLSTM
 from sockpuppet.model.dataset.cresci import CresciTweetDataset, CresciUserDataset, CresciTensorTweetDataset
 from sockpuppet.model.dataset.nbc import NbcTweetDataset, NbcTweetTensorDataset
+from sockpuppet.model.dataset.five38 import Five38TweetDataset, Five38TweetTensorDataset
 from sockpuppet.model.dataset.twitter_tokenize import tokenize
 from .marks import *
 
+FIVE38_TWEET_PATH = f"{TestConfig.TRAINING_DATA_PATH}/538/tweets.csv"
 NBC_TWEET_PATH = f"{TestConfig.TRAINING_DATA_PATH}/nbc/tweets.csv"
 CRESCI_PATH = f"{TestConfig.TRAINING_DATA_PATH}/cresci-2017/datasets_full.csv"
 GENUINE_ACCOUNT_TWEET_PATH = f"{CRESCI_PATH}/genuine_accounts.csv/tweets.csv"
@@ -239,6 +241,41 @@ def nbc_tweets_tensors_cpu(nbc_tweets: NbcTweetDataset, glove_embedding_cpu: Wor
 def nbc_tweets_tensors_cuda(nbc_tweets: NbcTweetDataset, glove_embedding_cuda: WordEmbeddings):
     return NbcTweetTensorDataset(
         data_source=nbc_tweets,
+        embeddings=glove_embedding_cuda,
+        tokenizer=tokenize
+    )
+
+###############################################################################
+
+###############################################################################
+# 538 tweets
+###############################################################################
+
+
+@pytest.fixture(scope="session")
+def five38_tweets():
+    """Load the tweets revealed by 538"""
+    return Five38TweetDataset(FIVE38_TWEET_PATH)
+
+
+@pytest.fixture(scope="session")
+def five38_tweets_tensors(request, device: torch.device):
+    return request.getfixturevalue(f"five38_tweets_tensors_{device.type}")
+
+
+@pytest.fixture(scope="session")
+def five38_tweets_tensors_cpu(five38_tweets: Five38TweetDataset, glove_embedding_cpu: WordEmbeddings):
+    return Five38TweetTensorDataset(
+        data_source=five38_tweets,
+        embeddings=glove_embedding_cpu,
+        tokenizer=tokenize
+    )
+
+
+@pytest.fixture(scope="session")
+def five38_tweets_tensors_cuda(five38_tweets: Five38TweetDataset, glove_embedding_cuda: WordEmbeddings):
+    return Five38TweetTensorDataset(
+        data_source=five38_tweets,
         embeddings=glove_embedding_cuda,
         tokenizer=tokenize
     )
