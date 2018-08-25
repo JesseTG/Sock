@@ -168,7 +168,7 @@ def trained_model(trainer: Engine, evaluator: Engine, training_data: DataLoader,
         trainer.state.validation_metrics.precision.append(validation_metrics["precision"])
 
     def score_function(trainer: Engine) -> float:
-        return -trainer.state.validation_metrics["loss"]
+        return -trainer.state.validation_metrics.loss[-1]
 
     handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer)
     trainer.add_event_handler(Events.EPOCH_COMPLETED, handler)
