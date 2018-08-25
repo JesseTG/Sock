@@ -4,7 +4,7 @@
 import csv
 import sys
 import time
-from typing import Callable, Sequence
+from typing import Callable, Sequence, Dict, Union
 
 import pytest
 from pytest import Item, Session
@@ -18,6 +18,8 @@ from ignite.engine import Events, Engine
 
 import pandas
 from pandas import DataFrame
+
+import cpuinfo
 
 from sockpuppet.app import create_app
 from sockpuppet.database import db as _db
@@ -38,6 +40,15 @@ GENUINE_ACCOUNT_USER_PATH = f"{CRESCI_PATH}/genuine_accounts.csv/users.csv"
 SOCIAL_SPAMBOTS_1_TWEET_PATH = f"{CRESCI_PATH}/social_spambots_1.csv/tweets.csv"
 SOCIAL_SPAMBOTS_1_USER_PATH = f"{CRESCI_PATH}/social_spambots_1.csv/users.csv"
 GLOVE_PATH = f"{TestConfig.TRAINING_DATA_PATH}/glove/glove.twitter.27B.25d.txt"
+
+
+def pytest_report_header(config, startdir):
+    cpu = cpuinfo.get_cpu_info()  # type: Dict[str, Union[str, int, Sequence[str]]]
+
+    return (
+        f"arch: {cpu['arch']}, cores: {cpu['count']}",
+        f"SOCKPUPPET_TRAINING_DATA_PATH: {TestConfig.TRAINING_DATA_PATH}"
+    )
 
 
 def pytest_collection_modifyitems(session, config, items: Sequence[Item]):
