@@ -30,7 +30,7 @@ function tokenize() {
         python3 -OO "$TOKENIZE" \
     > "$TOKENIZED_DIR/$BASENAME.txt"
 
-    echo "$\t\t(date) Done tokenizing $ARCHIVE"
+    echo -e "\t\t$(date) Done tokenizing $ARCHIVE"
 }
 
 echo -e "$(date) Start building custom GloVe model"
