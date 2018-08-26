@@ -45,6 +45,7 @@ def pytest_report_header(config, startdir):
     cpu = cpuinfo.get_cpu_info()  # type: Dict[str, Union[str, int, Sequence[str]]]
 
     return (
+        f"omp_threads: {torch.get_num_threads()}, cuda_devices: {torch.cuda.device_count()}",
         f"arch: {cpu['arch']}, cores: {cpu['count']}",
         f"SOCKPUPPET_TRAINING_DATA_PATH: {TestConfig.TRAINING_DATA_PATH}"
     )
