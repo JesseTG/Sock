@@ -39,6 +39,8 @@ class Five38TweetDataset(Dataset):
             doublequote=True
         )
 
+        self.data.rename(columns={"content": "text"}, inplace=True)
+
     def __len__(self) -> int:
         return len(self.data)
 
