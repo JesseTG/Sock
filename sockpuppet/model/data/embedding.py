@@ -12,7 +12,7 @@ TORCH_INT_DTYPES = (torch.uint8, torch.int8, torch.short, torch.int, torch.long)
 
 
 class WordEmbeddings:
-    def __init__(self, path: Union[DataFrame, str], dim: int, device="cpu"):
+    def __init__(self, path: Union[DataFrame, str], device="cpu"):
         if isinstance(path, str):
             with open(path, "r") as file:
                 data = pandas.read_table(
@@ -33,10 +33,13 @@ class WordEmbeddings:
         # self.words = data[0]
         # No need to keep around the wordlist separately, but if so we can just keep the dataframe
 
-        self.dim = dim
-        self.vectors = torch.as_tensor(data.iloc[:, 1:dim + 1].values, dtype=torch.float, device=device)  # type: Tensor
+        self._dim = int(data.get_dtype_counts().float64)
+        self.vectors = torch.as_tensor(data.iloc[:, 1:].values, dtype=torch.float, device=device)  # type: Tensor
         self.vectors.requires_grad_(False)
         # [all rows, second column:last column]
+
+        if device == "cpu":
+            self.vectors.pin_memory()
 
         self.indices = {word: index for index, word in enumerate(data[0])}
         # note: must append a <unk> zero vector to embedding file
@@ -51,6 +54,10 @@ class WordEmbeddings:
     @property
     def device(self) -> torch.device:
         return self.vectors.device
+
+    @property
+    def dim(self) -> int:
+        return self._dim
 
     def __getitem__(self, index) -> Tensor:
         # Indexing uses the same underlying storage

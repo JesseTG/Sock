@@ -178,13 +178,13 @@ def glove_embedding(request, device: torch.device, glove_embedding_cpu: WordEmbe
 @pytest.fixture(scope="session")
 def glove_embedding_cpu(glove_data: DataFrame):
     """Load the GloVe embeddings onto CPU memory."""
-    return WordEmbeddings(glove_data, 25, "cpu")
+    return WordEmbeddings(glove_data, "cpu")
 
 
 @pytest.fixture(scope="session")
 def glove_embedding_cuda(glove_data: DataFrame):
     """Load the GloVe embeddings onto CUDA memory."""
-    return WordEmbeddings(glove_data, 25, "cuda")
+    return WordEmbeddings(glove_data, "cuda")
 
 
 @pytest.fixture(scope="session")
