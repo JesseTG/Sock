@@ -109,14 +109,6 @@ def test_bench_encode(benchmark, glove_embedding: WordEmbeddings):
 
 
 @modes("cpu", "cuda")
-def test_encode_empty_string_to_zero(glove_embedding: WordEmbeddings):
-    tokens = "".split()
-    embedding = glove_embedding.encode(tokens)
-
-    assert embedding[0].cpu().numpy() == pytest.approx(ZERO_VECTOR.numpy())
-
-
-@modes("cpu", "cuda")
 def test_embedding_can_create_layer(glove_embedding: WordEmbeddings):
     layer = glove_embedding.to_layer()
     assert isinstance(layer, Embedding)

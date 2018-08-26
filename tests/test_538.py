@@ -7,15 +7,11 @@ from .marks import *
 
 
 def test_538_tweet_row_loaded(five38_tweets: Five38TweetDataset):
-    assert five38_tweets[3].text == "Amen! #blacklivesmatter https://t.co/wGffaOqgzl"
+    assert five38_tweets[5].text == 'Dan Bongino: "Nobody trolls liberals better than Donald Trump." Exactly!  https://t.co/AigV93aC8J'
 
 
 def test_538_all_tweets_loaded(five38_tweets: Five38TweetDataset):
-    assert len(five38_tweets) == 203451
-
-
-def test_538_loads_multiline_tweet(five38_tweets: Five38TweetDataset):
-    assert five38_tweets[4].text == "RT @NahBabyNah: Twitchy: Chuck Todd caught out there shilling for Hillary Clinton\r\nThe post BUSTED: Adam Baldwi... https://t.co/ay28pMpDw6 #…"
+    assert len(five38_tweets) == 2973379
 
 
 @modes("cpu", "cuda")
@@ -60,7 +56,7 @@ def test_538_tweet_tensor_dataset_loads_tensors(five38_tweets_tensors: Five38Twe
 
 @modes("cpu", "cuda")
 def test_538_tweet_tensor_encodes_all_words(five38_tweets_tensors: Five38TweetTensorDataset):
-    assert len(five38_tweets_tensors[0]) == 7
+    assert len(five38_tweets_tensors[0]) == 28
 
 
 @modes("cpu", "cuda")
