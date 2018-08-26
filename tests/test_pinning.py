@@ -78,4 +78,4 @@ def test_bench_copy_cuda_to_cpu_existing_tensor(benchmark, data_cuda: Tensor, pi
     assert result is not None
     assert result.data_ptr() == destination_addr
     assert not result.is_cuda
-    assert result.is_pinned()
+    assert result.is_pinned() == pin
