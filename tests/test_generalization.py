@@ -20,7 +20,7 @@ from sockpuppet.utils import split_integers
 from tests.marks import *
 
 CHECKPOINT_EVERY = 100
-MAX_EPOCHS = 5
+MAX_EPOCHS = 10
 BATCH_SIZE = 1000
 
 NOT_BOT = 0
