@@ -39,6 +39,7 @@ class WordEmbeddings:
         # [all rows, second column:last column]
 
         # Pinning self.vectors does *not* improve encoding performance
+        # torch.half isn't available for index_select, so we'll just use torch.float
 
         self.indices = {word: index for index, word in enumerate(data[0])}
         # note: must append a <unk> zero vector to embedding file
