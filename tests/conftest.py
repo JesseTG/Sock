@@ -46,8 +46,9 @@ def pytest_report_header(config, startdir):
 
     return (
         f"omp_threads: {torch.get_num_threads()}, cuda_devices: {torch.cuda.device_count()}",
+        f"default_dtype: {torch.get_default_dtype()}",
         f"arch: {cpu['arch']}, cores: {cpu['count']}",
-        f"SOCKPUPPET_TRAINING_DATA_PATH: {TestConfig.TRAINING_DATA_PATH}"
+        f"SOCKPUPPET_TRAINING_DATA_PATH: {TestConfig.TRAINING_DATA_PATH}",
     )
 
 
