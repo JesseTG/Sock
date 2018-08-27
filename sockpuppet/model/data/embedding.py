@@ -38,8 +38,7 @@ class WordEmbeddings:
         self.vectors.requires_grad_(False)
         # [all rows, second column:last column]
 
-        if device == "cpu":
-            self.vectors.pin_memory()
+        # Pinning self.vectors does *not* improve encoding performance
 
         self.indices = {word: index for index, word in enumerate(data[0])}
         # note: must append a <unk> zero vector to embedding file
