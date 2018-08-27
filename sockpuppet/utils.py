@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Helper utilities and decorators."""
-from typing import List, Sequence
+import torch
+from typing import List, Sequence, Dict
 from flask import flash
 
 
@@ -31,3 +32,21 @@ def split_integers(total: int, fractions: Sequence[float]) -> List[int]:
         # TODO: Is there a better way to distribute the difference?
 
     return tuple(splits)
+
+
+TORCH_DTYPES = {
+    "float16": torch.float16,
+    "float32": torch.float32,
+    "float64": torch.float64,
+    "half": torch.half,
+    "float": torch.float,
+    "double": torch.double,
+    "uint8": torch.uint8,
+    "int8": torch.int8,
+    "int16": torch.int16,
+    "int32": torch.int32,
+    "int64": torch.int64,
+    "short": torch.short,
+    "int": torch.int,
+    "long": torch.long,
+}  # type: Dict[str, torch.dtype]
