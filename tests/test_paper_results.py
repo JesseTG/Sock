@@ -37,23 +37,23 @@ Metrics = namedtuple("Metrics", ("accuracy", "loss", "precision", "recall"))
 
 
 @pytest.fixture(scope="module")
-def cresci_genuine_accounts_split(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
-    length = len(cresci_genuine_accounts_tweets_tensors)
+def cresci_genuine_accounts_split(cresci_genuine_accounts_tweets_tensors_cpu: CresciTensorTweetDataset):
+    length = len(cresci_genuine_accounts_tweets_tensors_cpu)
     split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
 
-    splits = random_split(cresci_genuine_accounts_tweets_tensors, split_lengths)
+    splits = random_split(cresci_genuine_accounts_tweets_tensors_cpu, split_lengths)
 
-    return Splits(cresci_genuine_accounts_tweets_tensors, *splits)
+    return Splits(cresci_genuine_accounts_tweets_tensors_cpu, *splits)
 
 
 @pytest.fixture(scope="module")
-def cresci_social_spambots_1_split(cresci_social_spambots_1_tweets_tensors: CresciTensorTweetDataset):
-    length = len(cresci_social_spambots_1_tweets_tensors)
+def cresci_social_spambots_1_split(cresci_social_spambots_1_tweets_tensors_cpu: CresciTensorTweetDataset):
+    length = len(cresci_social_spambots_1_tweets_tensors_cpu)
     split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
 
-    splits = random_split(cresci_social_spambots_1_tweets_tensors, split_lengths)
+    splits = random_split(cresci_social_spambots_1_tweets_tensors_cpu, split_lengths)
 
-    return Splits(cresci_social_spambots_1_tweets_tensors, *splits)
+    return Splits(cresci_social_spambots_1_tweets_tensors_cpu, *splits)
 
 
 @pytest.fixture(scope="module")
@@ -66,7 +66,7 @@ def training_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad, pin_memory=True)
 
 
 @pytest.fixture(scope="module")
@@ -79,7 +79,7 @@ def validation_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad, pin_memory=True)
 
 
 @pytest.fixture(scope="module")
@@ -92,7 +92,7 @@ def testing_data(
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
+    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad, pin_memory=True)
 
 
 def test_split_ratios_add_to_1():
