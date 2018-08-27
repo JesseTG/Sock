@@ -14,7 +14,7 @@ from ignite.handlers import EarlyStopping
 from ignite.metrics import Loss, BinaryAccuracy, Precision, Recall
 from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
-from sockpuppet.model.dataset import CresciTensorTweetDataset, NbcTweetTensorDataset, Five38TweetTensorDataset
+from sockpuppet.model.dataset import CresciTensorTweetDataset, Five38TweetTensorDataset
 from sockpuppet.model.data import sentence_pad, sentence_label_pad, WordEmbeddings
 from sockpuppet.utils import split_integers
 from tests.marks import *
@@ -47,22 +47,22 @@ def cresci_genuine_accounts_split(cresci_genuine_accounts_tweets_tensors: Cresci
 
 
 @pytest.fixture(scope="module")
-def cresci_social_spambots_1_split(cresci_social_spambots_1_tweets_tensors: CresciTensorTweetDataset):
-    length = len(cresci_social_spambots_1_tweets_tensors)
+def five38_split(five38_tweets_tensors: Five38TweetTensorDataset):
+    length = len(five38_tweets_tensors)
     split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
 
-    splits = random_split(cresci_social_spambots_1_tweets_tensors, split_lengths)
+    splits = random_split(five38_tweets_tensors, split_lengths)
 
-    return Splits(cresci_social_spambots_1_tweets_tensors, *splits)
+    return Splits(five38_tweets_tensors, *splits)
 
 
 @pytest.fixture(scope="module")
 def training_data(
     cresci_genuine_accounts_split: Splits,
-    cresci_social_spambots_1_split: Splits
+    five38_split: Splits
 ):
     notbot = SingleLabelDataset(cresci_genuine_accounts_split.training, NOT_BOT)
-    bot = SingleLabelDataset(cresci_social_spambots_1_split.training, BOT)
+    bot = SingleLabelDataset(five38_split.training, BOT)
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
@@ -72,10 +72,10 @@ def training_data(
 @pytest.fixture(scope="module")
 def validation_data(
     cresci_genuine_accounts_split: Splits,
-    cresci_social_spambots_1_split: Splits
+    five38_split: Splits
 ):
     notbot = SingleLabelDataset(cresci_genuine_accounts_split.validation, NOT_BOT)
-    bot = SingleLabelDataset(cresci_social_spambots_1_split.validation, BOT)
+    bot = SingleLabelDataset(five38_split.validation, BOT)
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
@@ -85,10 +85,10 @@ def validation_data(
 @pytest.fixture(scope="module")
 def testing_data(
     cresci_genuine_accounts_split: Splits,
-    cresci_social_spambots_1_split: Splits
+    five38_split: Splits
 ):
     notbot = SingleLabelDataset(cresci_genuine_accounts_split.testing, NOT_BOT)
-    bot = SingleLabelDataset(cresci_social_spambots_1_split.testing, BOT)
+    bot = SingleLabelDataset(five38_split.testing, BOT)
 
     dataset = ConcatDataset([notbot, bot])
     sampler = RandomSampler(dataset)
@@ -98,8 +98,6 @@ def testing_data(
 def test_split_ratios_add_to_1():
     # Very specifically want these numbers to *equal* 1.0 here
     assert TRAINING_SPLIT + VALIDATION_SPLIT + TESTING_SPLIT == 1.0
-
-# TODO: Document that this section is *strictly* for using the Cresci paper's data
 
 
 @modes("cuda")
@@ -113,11 +111,11 @@ def test_cresci_genuine_accounts_split_add_up(cresci_genuine_accounts_split: Spl
 
 
 @modes("cuda")
-def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: Splits):
-    total = len(cresci_social_spambots_1_split.full)
-    training_split = len(cresci_social_spambots_1_split.training)
-    validation_split = len(cresci_social_spambots_1_split.validation)
-    testing_split = len(cresci_social_spambots_1_split.testing)
+def test_538_split_add_up(five38_split: Splits):
+    total = len(five38_split.full)
+    training_split = len(five38_split.training)
+    validation_split = len(five38_split.validation)
+    testing_split = len(five38_split.testing)
 
     assert training_split + validation_split + testing_split == total
 
@@ -197,6 +195,20 @@ def testing_metrics(evaluator: Engine, testing_data: DataLoader):
     return evaluator.run(testing_data).metrics
 
 
+# @pytest.fixture(scope="module")
+# def nbc_metrics(evaluator: Engine, nbc_tweets_tensors: NbcTweetTensorDataset):
+#     nbc_data = SingleLabelDataset(nbc_tweets_tensors, BOT)
+#     nbc_loader = DataLoader(dataset=nbc_data, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
+#     return evaluator.run(nbc_loader).metrics
+
+
+# @pytest.fixture(scope="module")
+# def five38_metrics(evaluator: Engine, five38_tweets_tensors: Five38TweetTensorDataset):
+#     five38_data = SingleLabelDataset(five38_tweets_tensors, BOT)
+#     five38_loader = DataLoader(dataset=five38_data, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
+#     return evaluator.run(five38_loader).metrics
+
+
 @modes("cuda", "dp")
 @pytest.mark.parametrize("metric", METRICS)
 @pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
@@ -218,3 +230,17 @@ def test_metrics_validation_set(trained_model: Engine, threshold: float, metric:
 @pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
 def test_metrics_testing_set(testing_metrics: Dict[str, float], threshold: float, metric: str):
     assert testing_metrics[metric] >= threshold
+
+
+# @modes("cuda", "dp")
+# @pytest.mark.parametrize("metric", METRICS)
+# @pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
+# def test_metrics_nbc(nbc_metrics: Dict[str, float], threshold: float, metric: str):
+#     assert nbc_metrics[metric] >= threshold
+
+
+# @modes("cuda", "dp")
+# @pytest.mark.parametrize("metric", METRICS)
+# @pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
+# def test_metrics_538(five38_metrics: dict, threshold: float, metric: str):
+#     assert five38_metrics[metric] >= threshold
