@@ -42,7 +42,7 @@ class WordEmbeddings:
         # torch.half isn't available for index_select, so we'll just use torch.float
 
         self.indices = {word: index for index, word in enumerate(data[0])}
-        # note: must append a <unk> zero vector to embedding file
+        # note: must prepend a <unk> zero vector to embedding file
         # do so with python3 -c 'print("<unk>", *([0.0]*25))' >> the_data_file.txt
 
     def _get_word(self, index):
