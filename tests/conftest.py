@@ -68,8 +68,11 @@ def pytest_collection_modifyitems(session, config, items: Sequence[Item]):
 
 
 def pytest_sessionstart(session: Session):
-    if torch.cuda.is_available() and "spawn" in torch.multiprocessing.get_all_start_methods():
-        torch.multiprocessing.set_start_method("spawn")
+    try:
+        if torch.cuda.is_available() and "spawn" in torch.multiprocessing.get_all_start_methods():
+            torch.multiprocessing.set_start_method("spawn")
+    except RuntimeError as e:
+        print(e)
 
 
 @pytest.hookimpl(hookwrapper=True)
