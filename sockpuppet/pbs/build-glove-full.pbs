@@ -4,7 +4,7 @@
 #PBS -q extended
 
 SOCKPUPPET="$HOME/code/Sock-Puppet/sockpuppet"
-TOKENIZE="$SOCKPUPPET/model/dataset/twitter_tokenize.py"
+TOKENIZE="$SOCKPUPPET/model/data/twitter_tokenize.py"
 TWITTER_DIR="$HOME/scratch/twitter"
 WORKING_DIR="$HOME/scratch/twitter"
 CUSTOM_GLOVE_DIR="$TWITTER_DIR/custom-glove"
