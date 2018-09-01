@@ -13,7 +13,7 @@ WORKING_DIR="$HOME/scratch/twitter"
 CUSTOM_GLOVE_DIR="$TWITTER_DIR/custom-glove"
 TOKENIZED_DIR="$CUSTOM_GLOVE_DIR/tokenized"
 
-mkdir -p "$CUSTOM_GLOVE"
+mkdir -p "$CUSTOM_GLOVE_DIR"
 cd "$WORKING_DIR"
 
 MEMORY=100
