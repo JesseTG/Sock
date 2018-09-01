@@ -10,7 +10,6 @@ WORKING_DIR="$HOME/scratch/twitter"
 CUSTOM_GLOVE_DIR="$TWITTER_DIR/custom-glove"
 TOKENIZED_DIR="$CUSTOM_GLOVE_DIR/tokenized"
 
-MEMORY=100
 
 mkdir -p "$TOKENIZED_DIR"
 cd "$TWITTER_DIR"
@@ -23,14 +22,14 @@ function tokenize() {
     BASENAME="$(basename -s.7z "$ARCHIVE")"
 
 
-    echo -e "\t\t$(date) Tokenizing the tweets in $ARCHIVE"
+    echo -e "$(date) Tokenizing the tweets in $ARCHIVE"
 
     7z e -so "$ARCHIVE" | \
         jq --raw-input --raw-output --from-file "$SOCKPUPPET/jq/get-text.jq" | \
         python3 -OO "$TOKENIZE" \
     > "$TOKENIZED_DIR/$BASENAME.txt"
 
-    echo -e "\t\t$(date) Done tokenizing $ARCHIVE"
+    echo -e "$(date) Done tokenizing $ARCHIVE"
 }
 
 echo -e "$(date) Start building custom GloVe model"
@@ -39,7 +38,7 @@ echo -e "$(date) Start building custom GloVe model"
 ## Building the corpus 
 ###############################################################################
 
-echo -e "\t$(date) Start building corpus"
+echo -e "$(date) Start building corpus"
 
 while read i; do
     tokenize "$i" &
@@ -47,12 +46,12 @@ done < <(find . -name '*twitter-stream-*.7z' -or -name 'tweets.*.7z')
 
 wait
 
-echo -e "\t\t$(date) Combining tokenized corpii"
+echo -e "$(date) Combining tokenized corpii"
 
 cat $TOKENIZED_DIR/*.txt > "$CUSTOM_GLOVE_DIR/corpus.txt"
 rm -rf "$TOKENIZED_DIR"
 
-echo -e "\t$(date) Done building corpus, available in $CUSTOM_GLOVE_DIR/corpus.txt"
+echo -e "$(date) Done building corpus, available in $CUSTOM_GLOVE_DIR/corpus.txt"
 
 #------------------------------------------------------------------------------
 
@@ -62,8 +61,8 @@ echo -e "\t$(date) Done building corpus, available in $CUSTOM_GLOVE_DIR/corpus.t
 ###############################################################################
 MAX_VOCAB=3000000
 
-echo -e "\t$(date) Counting word appearences in corpus"
-echo -e "\t\t-max-vocab = $MAX_VOCAB words"
+echo -e "$(date) Counting word appearences in corpus"
+echo -e "-max-vocab = $MAX_VOCAB words"
 
 vocab_count \
     -verbose 2 \
@@ -71,99 +70,11 @@ vocab_count \
     < "$CUSTOM_GLOVE_DIR/corpus.txt" \
     > "$CUSTOM_GLOVE_DIR/vocab.txt"
 
-echo -e "\t$(date) Done counting words, results available in $CUSTOM_GLOVE_DIR/vocab.txt"
+echo -e "$(date) Done counting words, results available in $CUSTOM_GLOVE_DIR/vocab.txt"
 
 #------------------------------------------------------------------------------
 
 
-###############################################################################
-## Building coooccurrence matrix
-###############################################################################
-
-echo -e "\t$(date) Building cooccurrence matrix"
-echo -e "\t\t-memory = $MEMORY GB"
-
-OVERFLOW_DIR="$CUSTOM_GLOVE_DIR/overflow"
-mkdir -p "$OVERFLOW_DIR"
-
-cooccur \
-    -verbose 3 \
-    -memory "$MEMORY" \
-    -vocab-file "$CUSTOM_GLOVE_DIR/vocab.txt" \
-    -overflow-file "$OVERFLOW_DIR/overflow" \
-    < "$CUSTOM_GLOVE_DIR/corpus.txt" \
-    > "$CUSTOM_GLOVE_DIR/cooccurrences.bin"
-
-rm -rf "$OVERFLOW_DIR"
-echo -e "\t$(date) Done building cooccurrence matrix, results available in $CUSTOM_GLOVE_DIR/cooccurrences.bin"
-
-#------------------------------------------------------------------------------
-
-###############################################################################
-## Shuffling coooccurrence matrix
-###############################################################################
-
-echo -e "\t$(date) Shuffling cooccurrence matrix"
-echo -e "\t\t-memory = $MEMORY GB"
-
-TEMP_SHUFFLE_DIR="$CUSTOM_GLOVE_DIR/temp_shuffle"
-mkdir -p "$TEMP_SHUFFLE_DIR"
-
-shuffle \
-    -memory "$MEMORY" \
-    -temp-file "$TEMP_SHUFFLE_DIR/temp_shuffle" \
-    < "$CUSTOM_GLOVE_DIR/cooccurrences.bin" \
-    > "$CUSTOM_GLOVE_DIR/cooccurrences.shuf.bin"
-
-rm -rf "$TEMP_SHUFFLE_DIR"
-echo -e "\t$(date) Done shuffling cooccurrence matrix, available in $CUSTOM_GLOVE_DIR/cooccurrences.shuf.bin"
-
-#------------------------------------------------------------------------------
-
-###############################################################################
-## Training the GloVe model
-###############################################################################
-
-VECTOR_SIZE=100
-ITER=25
-THREADS="$(nproc)"
-
-echo -e "\t$(date) Training GloVe model"
-echo -e "\t\t-vector-size = $VECTOR_SIZE"
-echo -e "\t\t-threads = $THREADS"
-echo -e "\t\t-iter = $ITER"
-
-glove \
-    -input-file "$CUSTOM_GLOVE_DIR/cooccurrences.shuf.bin" \
-    -vocab-file "$CUSTOM_GLOVE_DIR/vocab.txt" \
-    -save-file "$CUSTOM_GLOVE_DIR/glove" \
-    -gradsq-file "$CUSTOM_GLOVE_DIR/gradsq" \
-    -vector-size "$VECTOR_SIZE" \
-    -iter "$ITER" \
-    -threads "$THREADS"
-
-echo -e "\t$(date) Done training GloVe model, available in $CUSTOM_GLOVE_DIR/glove"
-
-#------------------------------------------------------------------------------
-
-###############################################################################
-## Post-processing the GloVe model
-###############################################################################
-
-echo -e "\t$(date) Prepending <pad> and <unknown> to GloVe model"
-
-python3 -c "print('<pad>', *([0.0] * $VECTOR_SIZE))" >> "$CUSTOM_GLOVE_DIR/glove.txt~"
-python3 -c "print('<unknown>', *([0.0] * $VECTOR_SIZE))" >> "$CUSTOM_GLOVE_DIR/glove.txt~"
-cat "$CUSTOM_GLOVE_DIR/glove.txt" >> "$CUSTOM_GLOVE_DIR/glove.txt~"
-
-mv "$CUSTOM_GLOVE_DIR/glove.txt~" "$CUSTOM_GLOVE_DIR/glove.txt"
-
-echo -e "\t$(date) Compressing GloVe model"
-
-xz -9 --extreme --stdout --threads=0 -vv "$CUSTOM_GLOVE_DIR/glove.txt" > "$CUSTOM_GLOVE_DIR/glove.xz"
-
-echo -e "\t$(date) Done compressing GloVe model, available in $CUSTOM_GLOVE_DIR/glove.xz"
-
-#------------------------------------------------------------------------------
+source "$SOCKPUPPET/pbs/build-cooccur.pbs"
 
 echo "$(date) Done building custom GloVe model"

@@ -3,22 +3,42 @@
 #PBS -l nodes=1:ppn=28,walltime=48:00:00
 #PBS -q long
 
-# see the glove repo demo.sh for details, but the order is basically:
-# vocab_count
-# cooccur
-# shuffle
-# glove
-# you can pipe from stdin, so it's ok to compress the corpus
-
 module load shared
 module load anaconda/.anaconda
 
+SOCKPUPPET="$HOME/code/Sock-Puppet/sockpuppet"
+TOKENIZE="$SOCKPUPPET/model/data/twitter_tokenize.py"
+TWITTER_DIR="$HOME/scratch/twitter"
 WORKING_DIR="$HOME/scratch/twitter"
-CUSTOM_GLOVE="$WORKING_DIR/custom-glove"
-mkdir -p "$CUSTOM_GLOVE"
+CUSTOM_GLOVE_DIR="$TWITTER_DIR/custom-glove"
+TOKENIZED_DIR="$CUSTOM_GLOVE_DIR/tokenized"
 
+mkdir -p "$CUSTOM_GLOVE"
 cd "$WORKING_DIR"
 
-echo "Start build-cooccur.pbs at $(date)"
-cooccur -memory 120.0 -vocab-file "$CUSTOM_GLOVE/vocab.txt" < "$WORKING_DIR/corpus.txt" > "$CUSTOM_GLOVE/cooccurrences.bin"
-echo "End build-cooccur.pbs at $(date)"
+MEMORY=100
+
+###############################################################################
+## Building coooccurrence matrix
+###############################################################################
+
+echo -e "$(date) Building cooccurrence matrix"
+echo -e "-memory = $MEMORY GB"
+
+OVERFLOW_DIR="$CUSTOM_GLOVE_DIR/overflow"
+mkdir -p "$OVERFLOW_DIR"
+
+cooccur \
+    -verbose 3 \
+    -memory "$MEMORY" \
+    -vocab-file "$CUSTOM_GLOVE_DIR/vocab.txt" \
+    -overflow-file "$OVERFLOW_DIR/overflow" \
+    < "$CUSTOM_GLOVE_DIR/corpus.txt" \
+    > "$CUSTOM_GLOVE_DIR/cooccurrences.bin"
+
+rm -rf "$OVERFLOW_DIR"
+echo -e "$(date) Done building cooccurrence matrix, results available in $CUSTOM_GLOVE_DIR/cooccurrences.bin"
+
+#------------------------------------------------------------------------------
+
+source "$SOCKPUPPET/pbs/build-shuffle.pbs"

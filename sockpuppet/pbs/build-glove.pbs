@@ -1,33 +1,63 @@
 #!/usr/bin/env bash
 #PBS -k eo
-#PBS -l nodes=1:ppn=28,walltime=168:00:00
-#PBS -q extended
-
-# see the glove repo demo.sh for details, but the order is basically:
-# vocab_count
-# cooccur
-# shuffle
-# glove
-# you can pipe from stdin, so it's ok to compress the corpus
+#PBS -l nodes=1:ppn=28,walltime=48:00:00
+#PBS -q long
 
 module load shared
 module load anaconda/.anaconda
 
-# TODO: Make multiple nodes run this model but with different parameters
-
+SOCKPUPPET="$HOME/code/Sock-Puppet/sockpuppet"
+TOKENIZE="$SOCKPUPPET/model/data/twitter_tokenize.py"
+TWITTER_DIR="$HOME/scratch/twitter"
 WORKING_DIR="$HOME/scratch/twitter"
-CUSTOM_GLOVE="$WORKING_DIR/custom-glove"
-mkdir -p "$CUSTOM_GLOVE"
+CUSTOM_GLOVE_DIR="$TWITTER_DIR/custom-glove"
+TOKENIZED_DIR="$CUSTOM_GLOVE_DIR/tokenized"
 
+mkdir -p "$CUSTOM_GLOVE"
 cd "$WORKING_DIR"
 
-echo "Start build-glove.pbs at $(date)"
-glove \
-    -input-file "$CUSTOM_GLOVE/cooccurrences.shuf.bin" \
-    -vocab-file "$CUSTOM_GLOVE/vocab.txt" \
-    -save-file "$CUSTOM_GLOVE/vectors" \
-    -gradsq-file "$CUSTOM_GLOVE/gradsq" \
-    -vector-size 100 \
-    -threads $(nproc)
+###############################################################################
+## Training the GloVe model
+###############################################################################
 
-echo "End build-glove.pbs at $(date)"
+VECTOR_SIZE=100
+ITER=25
+THREADS="$(nproc)"
+
+echo -e "$(date) Training GloVe model"
+echo -e "-vector-size = $VECTOR_SIZE"
+echo -e "-threads = $THREADS"
+echo -e "-iter = $ITER"
+
+glove \
+    -input-file "$CUSTOM_GLOVE_DIR/cooccurrences.shuf.bin" \
+    -vocab-file "$CUSTOM_GLOVE_DIR/vocab.txt" \
+    -save-file "$CUSTOM_GLOVE_DIR/glove" \
+    -gradsq-file "$CUSTOM_GLOVE_DIR/gradsq" \
+    -vector-size "$VECTOR_SIZE" \
+    -iter "$ITER" \
+    -threads "$THREADS"
+
+echo -e "$(date) Done training GloVe model, available in $CUSTOM_GLOVE_DIR/glove"
+
+#------------------------------------------------------------------------------
+
+###############################################################################
+## Post-processing the GloVe model
+###############################################################################
+
+echo -e "$(date) Prepending <pad> and <unknown> to GloVe model"
+
+python3 -c "print('<pad>', *([0.0] * $VECTOR_SIZE))" >> "$CUSTOM_GLOVE_DIR/glove.txt~"
+python3 -c "print('<unknown>', *([0.0] * $VECTOR_SIZE))" >> "$CUSTOM_GLOVE_DIR/glove.txt~"
+cat "$CUSTOM_GLOVE_DIR/glove.txt" >> "$CUSTOM_GLOVE_DIR/glove.txt~"
+
+mv "$CUSTOM_GLOVE_DIR/glove.txt~" "$CUSTOM_GLOVE_DIR/glove.txt"
+
+echo -e "$(date) Compressing GloVe model"
+
+xz -9 --extreme --stdout --threads=0 -vv "$CUSTOM_GLOVE_DIR/glove.txt" > "$CUSTOM_GLOVE_DIR/glove.xz"
+
+echo -e "$(date) Done compressing GloVe model, available in $CUSTOM_GLOVE_DIR/glove.xz"
+
+#------------------------------------------------------------------------------
