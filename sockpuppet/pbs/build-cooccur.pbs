@@ -8,8 +8,8 @@ module load anaconda/.anaconda
 
 SOCKPUPPET="$HOME/code/Sock-Puppet/sockpuppet"
 TOKENIZE="$SOCKPUPPET/model/data/twitter_tokenize.py"
-TWITTER_DIR="$HOME/scratch/twitter"
-WORKING_DIR="$HOME/scratch/twitter"
+TWITTER_DIR="/gpfs/scratch/$USER/twitter"
+WORKING_DIR="/gpfs/scratch/$USER/twitter"
 CUSTOM_GLOVE_DIR="$TWITTER_DIR/custom-glove"
 TOKENIZED_DIR="$CUSTOM_GLOVE_DIR/tokenized"
 
