@@ -35,23 +35,25 @@ METRICS = ("accuracy", "precision", "recall")
 
 
 @pytest.fixture(scope="module")
-def cresci_genuine_accounts_split(cresci_genuine_accounts_tweets_tensors_cpu: CresciTensorTweetDataset):
-    length = len(cresci_genuine_accounts_tweets_tensors_cpu)
+def cresci_genuine_accounts_split(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
+    data = Subset(cresci_genuine_accounts_tweets_tensors, range(10000))
+    length = len(data)
     split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
 
-    splits = random_split(cresci_genuine_accounts_tweets_tensors_cpu, split_lengths)
+    splits = random_split(data, split_lengths)
 
-    return Splits(cresci_genuine_accounts_tweets_tensors_cpu, *splits)
+    return Splits(data, *splits)
 
 
 @pytest.fixture(scope="module")
-def cresci_social_spambots_1_split(cresci_social_spambots_1_tweets_tensors_cpu: CresciTensorTweetDataset):
-    length = len(cresci_social_spambots_1_tweets_tensors_cpu)
+def cresci_social_spambots_1_split(cresci_social_spambots_1_tweets_tensors):
+    data = Subset(cresci_social_spambots_1_tweets_tensors, range(10000))
+    length = len(data)
     split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
 
-    splits = random_split(cresci_social_spambots_1_tweets_tensors_cpu, split_lengths)
+    splits = random_split(data, split_lengths)
 
-    return Splits(cresci_social_spambots_1_tweets_tensors_cpu, *splits)
+    return Splits(data, *splits)
 
 
 @pytest.fixture(scope="module")
