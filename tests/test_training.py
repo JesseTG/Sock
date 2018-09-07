@@ -105,6 +105,17 @@ def validation_tensors_cuda(validation_tensors_cpu: TensorPair):
 ###############################################################################
 
 
+@pytest.fixture(scope="function")
+def trainer(make_trainer, device: torch.device, lstm: ContextualLSTM):
+    optimizer = torch.optim.SGD(
+        lstm.parameters(),
+        lr=0.1,
+        momentum=0.9,
+        nesterov=True
+    )
+    return make_trainer(device, lstm, optimizer)
+
+
 @pytest.fixture(scope="module")
 def training_dataset(training_tensors: TensorPair):
     return LabelDataset(*training_tensors)

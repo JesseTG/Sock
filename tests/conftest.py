@@ -13,6 +13,7 @@ from webtest import TestApp
 import torch.multiprocessing
 import torch
 from torch.nn import Module, DataParallel
+from torch.optim import Optimizer
 import ignite
 from ignite.engine import Events, Engine
 
@@ -78,17 +79,32 @@ def pytest_sessionstart(session: Session):
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item: Item, call):
-    result = yield
+    outcome = yield
+    report = outcome.get_result()
+    if call.when == 'call' and item.get_closest_marker("report_metrics") is not None:
+        if "trained_model" in item.funcargs:
+            report.user_properties.append(("trained_model", item.funcargs["trained_model"]))
 
-    if item.function is not None and item.get_closest_marker("record_runtime") is not None:
-        # If we want to record the length of time this test runs for...
-        if not hasattr(item.function, "duration"):
-            # If we haven't yet recorded this function's runtime...
-            item.function.duration = dict()
 
-        if result.result.passed:
-            # If this test succeeded...
-            item.function.duration[item.name] = result.result.duration
+def pytest_terminal_summary(terminalreporter, exitstatus):
+    report_metrics = [r for r in terminalreporter.getreports(
+        "") if "report_metrics" in r.keywords and r.when == 'setup']
+    terminalreporter.section("Training Results")
+
+    for report in report_metrics:
+        engine = report.user_properties[0][1]  # type: Engine
+        state = engine.state
+        train = state.training_metrics
+        valid = state.validation_metrics
+        terminalreporter.line(report.nodeid)
+        terminalreporter.line(f"{state.epoch} / {state.max_epochs} epochs, {state.iteration} iterations")
+        terminalreporter.line(f"Time:\t{state.duration:.3f}s")
+        terminalreporter.line(f"Accuracy:\ttrain={train.accuracy[-1]:.5f}, valid={valid.accuracy[-1]:.5f}")
+        terminalreporter.line(f"Precision:\ttrain={train.precision[-1]:.5f}, valid={valid.precision[-1]:.5f}")
+        terminalreporter.line(f"Recall:\ttrain={train.recall[-1]:.5f}, valid={valid.recall[-1]:.5f}")
+        terminalreporter.line(f"Loss:\ttrain={train.loss[-1]:.5f}, valid={valid.loss[-1]:.5f}")
+        terminalreporter.line("")
+        # TODO: Report running time
 
 
 @pytest.fixture
@@ -361,16 +377,16 @@ def cresci_social_spambots_1_tweets_tensors_cuda(cresci_social_spambots_1_tweets
         tokenizer=tokenize
     )
 
+###############################################################################
+# training ####################################################################
+
 
 @pytest.fixture(scope="session")
 def make_trainer():
-    def _make(device: torch.device, model: Module):
+    def _make(device: torch.device, model: Module, optimizer: Optimizer):
         model.train(True)
         model.to(device)
-        optimizer = torch.optim.SGD(
-            model.parameters(),
-            lr=0.01
-        )
+
         criterion = torch.nn.BCELoss()
         trainer = ignite.engine.create_supervised_trainer(model, optimizer, criterion, device)
         trainer.state = ignite.engine.State()
@@ -391,6 +407,14 @@ def make_trainer():
     return _make
 
 
-@pytest.fixture(scope="function")
-def trainer(make_trainer, device: torch.device, lstm: ContextualLSTM):
-    return make_trainer(device, lstm)
+# @pytest.fixture(scope="function")
+# def trainer(make_trainer, device: torch.device, lstm: ContextualLSTM):
+#     optimizer = torch.optim.SGD(
+#         model.parameters(),
+#         lr=0.1,
+#         momentum=0.9,
+#         nesterov=True
+#     )
+#     return make_trainer(device, lstm, optimizer)
+
+# ------------------------------------------------------------------------------
