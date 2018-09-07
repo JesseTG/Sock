@@ -208,6 +208,14 @@ def testing_metrics(evaluator: Engine, testing_data: DataLoader):
 
 
 @modes("cuda", "dp")
+@report_metrics
+def test_training_complete(trained_model: Engine):
+    assert trained_model is not None
+
+    return trained_model
+
+
+@modes("cuda", "dp")
 @pytest.mark.parametrize("metric", METRICS)
 @pytest.mark.parametrize("threshold", METRIC_THRESHOLDS)
 def test_metrics_training_set(trained_model: Engine, threshold: float, metric: str):
