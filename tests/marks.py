@@ -10,10 +10,10 @@ modes = pytest.mark.modes
 cpu_only = modes("cpu")
 cuda_only = modes("cuda")
 dp_only = modes("dp")
-record_runtime = pytest.mark.record_runtime
 slow = pytest.mark.slow
 cpu = pytest.mark.cpu
 cuda = pytest.mark.cuda
 dp = pytest.mark.dp
+report_metrics = pytest.mark.report_metrics
 
 # TODO: Add a mark for skipping test for which a required file doesn't exist
