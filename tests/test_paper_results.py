@@ -16,7 +16,7 @@ from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
 from sockpuppet.model.dataset import CresciTensorTweetDataset, NbcTweetTensorDataset, Five38TweetTensorDataset
 from sockpuppet.model.data import sentence_pad, sentence_label_pad, WordEmbeddings
-from sockpuppet.utils import split_integers
+from sockpuppet.utils import split_integers, expand_binary_class, to_singleton_row, Splits, Metrics
 from tests.marks import *
 
 CHECKPOINT_EVERY = 100
@@ -32,8 +32,6 @@ TRAINER_PATIENCE = 100
 METRIC_THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90, 0.95)
 METRICS = ("accuracy", "precision", "recall")
 
-Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
-Metrics = namedtuple("Metrics", ("accuracy", "loss", "precision", "recall"))
 
 
 @pytest.fixture(scope="module")
@@ -120,73 +118,88 @@ def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: S
 
 
 @pytest.fixture(scope="module")
-def trainer_engine(make_trainer, device: torch.device, mode: str, glove_embedding: WordEmbeddings):
-    # I can't be bothered to figure out how fixture overriding works
-
+def model(mode: str, device: torch.device, glove_embedding: WordEmbeddings):
     lstm = ContextualLSTM(glove_embedding, device=device)
+
     if mode == 'dp':
-        return make_trainer(device, DataParallel(lstm))
-    else:
-        return make_trainer(device, lstm)
+        lstm = DataParallel(lstm)
+
+    return lstm
+
+
+@pytest.fixture(scope="module", params=[
+    pytest.param((ASGD, {"lr": 0.1}), id="ASGD"),
+    pytest.param((Adagrad, {"lr": 0.1}), id="Adagrad"),
+    pytest.param((Adadelta, {}), id="Adadelta"),
+    pytest.param((Adam, {}), id="Adam"),
+    pytest.param((Adam, {"lr": 0.01}), id="Adam(lr=0.01)"),
+    pytest.param((Adam, {"lr": 0.1}), id="Adam(lr=0.1)"),
+    pytest.param((SGD, {"lr": 0.1, "momentum": 0.9, "nesterov": True}), id="SGD"),
+    pytest.param((RMSprop, {}), id="RMSprop-no-momentum"),
+    pytest.param((RMSprop, {"momentum": 0.9}), id="RMSprop-momentum"),
+    pytest.param((Rprop, {}), id="Rprop"),
+])
+def optimizer(request, model: Module):
+    return request.param[0](model.parameters(), **request.param[1])
 
 
 @pytest.fixture(scope="module")
-def evaluator(trainer_engine: Engine, device: torch.device):
-    def tf(y):
-        # TODO: Move to general utility function elsewhere
-        return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
+def trainer(request, make_trainer, device: torch.device, optimizer: Optimizer, model: Module):
+    return make_trainer(device, model, optimizer)
 
-    mapping = torch.tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
 
-    def tf_2class(output):
-        y_pred, y = output
-
-        y_pred = mapping.index_select(0, y_pred.round().to(torch.long))
-
-        return (y_pred, y.to(torch.long))
-
+@pytest.fixture(scope="module")
+def evaluator(trainer: Engine, device: torch.device):
     return ignite.engine.create_supervised_evaluator(
-        trainer_engine.state.model,
+        trainer.state.model,
         metrics={
-            "loss": Loss(trainer_engine.state.criterion, output_transform=tf),
-            "accuracy": BinaryAccuracy(output_transform=tf),
-            "recall": Recall(average=True, output_transform=tf_2class),
-            "precision": Precision(average=True, output_transform=tf_2class),
+            "loss": Loss(trainer.state.criterion, output_transform=to_singleton_row),
+            "accuracy": BinaryAccuracy(output_transform=to_singleton_row),
+            "recall": Recall(average=True, output_transform=expand_binary_class),
+            "precision": Precision(average=True, output_transform=expand_binary_class),
         }
     )
 
 
 @pytest.fixture(scope="module")
-def trained_model(trainer_engine: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
+def trained_model(request, trainer: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
 
-    @trainer_engine.on(Events.STARTED)
-    def init_metrics(trainer_engine: Engine):
-        trainer_engine.state.training_metrics = Metrics([], [], [], [])
-        trainer_engine.state.validation_metrics = Metrics([], [], [], [])
+    @trainer.on(Events.STARTED)
+    def init_metrics(trainer: Engine):
+        trainer.state.training_metrics = Metrics([], [], [], [])
+        trainer.state.validation_metrics = Metrics([], [], [], [])
 
-    @trainer_engine.on(Events.EPOCH_COMPLETED)
-    def validate(trainer_engine: Engine):
+    @trainer.on(Events.EPOCH_COMPLETED)
+    def validate(trainer: Engine):
         training_metrics = evaluator.run(training_data).metrics  # type: Dict[str, float]
-        trainer_engine.state.training_metrics.loss.append(training_metrics["loss"])
-        trainer_engine.state.training_metrics.accuracy.append(training_metrics["accuracy"])
-        trainer_engine.state.training_metrics.recall.append(training_metrics["recall"])
-        trainer_engine.state.training_metrics.precision.append(training_metrics["precision"])
+        trainer.state.training_metrics.loss.append(training_metrics["loss"])
+        trainer.state.training_metrics.accuracy.append(training_metrics["accuracy"])
+        trainer.state.training_metrics.recall.append(training_metrics["recall"])
+        trainer.state.training_metrics.precision.append(training_metrics["precision"])
 
         validation_metrics = evaluator.run(validation_data).metrics  # type: Dict[str, float]
-        trainer_engine.state.validation_metrics.loss.append(validation_metrics["loss"])
-        trainer_engine.state.validation_metrics.accuracy.append(validation_metrics["accuracy"])
-        trainer_engine.state.validation_metrics.recall.append(validation_metrics["recall"])
-        trainer_engine.state.validation_metrics.precision.append(validation_metrics["precision"])
+        trainer.state.validation_metrics.loss.append(validation_metrics["loss"])
+        trainer.state.validation_metrics.accuracy.append(validation_metrics["accuracy"])
+        trainer.state.validation_metrics.recall.append(validation_metrics["recall"])
+        trainer.state.validation_metrics.precision.append(validation_metrics["precision"])
 
-    def score_function(trainer_engine: Engine) -> float:
-        return -trainer_engine.state.validation_metrics.loss[-1]
+    timer = Timer(average=True)
 
-    handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer_engine)
-    trainer_engine.add_event_handler(Events.EPOCH_COMPLETED, handler)
+    @trainer.on(Events.COMPLETED)
+    def record_time(trainer: Engine):
+        trainer.state.duration = timer.value()
 
-    trainer_engine.run(training_data, max_epochs=MAX_EPOCHS)
+    def score_function(trainer: Engine) -> float:
+        return -trainer.state.validation_metrics.loss[-1]
 
-    return trainer_engine
+    handler = EarlyStopping(patience=TRAINER_PATIENCE, score_function=score_function, trainer=trainer)
+    trainer.add_event_handler(Events.EPOCH_COMPLETED, handler)
+
+    timer.attach(trainer, start=Events.STARTED, pause=Events.COMPLETED)
+
+    trainer.run(training_data, max_epochs=MAX_EPOCHS)
+
+    return trainer
 
 
 @pytest.fixture(scope="module")

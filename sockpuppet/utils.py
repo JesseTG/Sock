@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """Helper utilities and decorators."""
+
+from functools import lru_cache
+from collections import defaultdict, namedtuple
 import torch
-from typing import List, Sequence, Dict
+from torch import Tensor
+from typing import List, Sequence, Dict, Tuple
 from flask import flash
 
 
@@ -34,6 +38,28 @@ def split_integers(total: int, fractions: Sequence[float]) -> List[int]:
     return tuple(splits)
 
 
+@lru_cache(maxsize=16)
+def _make_mapping(device: torch.device) -> Tensor:
+    return torch.as_tensor([[1, 0], [0, 1]], device=device, dtype=torch.long)
+
+
+def expand_binary_class(output: Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
+    '''
+    Expand a binary classifier's single class from a scalar to a 2-tensor
+    '''
+    y_pred, y = output
+
+    y_pred = _make_mapping(y_pred.device).index_select(0, y_pred.round().to(torch.long))
+
+    return (y_pred, y.to(torch.long))
+
+
+def to_singleton_row(y: Tuple[Tensor, Tensor]) -> Tuple[Tensor, Tensor]:
+    '''
+    Reshape a tensor to be a row of singletons, e.g. [[1], [2], [3], ...]
+    '''
+    return (y[0].reshape(-1, 1), y[1].reshape(-1, 1))
+
 TORCH_DTYPES = {
     "float16": torch.float16,
     "float32": torch.float32,
@@ -50,3 +76,6 @@ TORCH_DTYPES = {
     "int": torch.int,
     "long": torch.long,
 }  # type: Dict[str, torch.dtype]
+
+Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
+Metrics = namedtuple("Metrics", ("accuracy", "loss", "precision", "recall"))
