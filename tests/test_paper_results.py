@@ -35,7 +35,6 @@ METRIC_THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90)
 METRICS = ("accuracy", "precision", "recall")
 
 
-
 @pytest.fixture(scope="module")
 def cresci_genuine_accounts_split(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
     data = Subset(cresci_genuine_accounts_tweets_tensors, range(10000))
@@ -97,8 +96,6 @@ def testing_data(
 def test_split_ratios_add_to_1():
     # Very specifically want these numbers to *equal* 1.0 here
     assert TRAINING_SPLIT + VALIDATION_SPLIT + TESTING_SPLIT == 1.0
-
-# TODO: Document that this section is *strictly* for using the Cresci paper's data
 
 
 @modes("cuda")
