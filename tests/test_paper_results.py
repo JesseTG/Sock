@@ -1,4 +1,5 @@
 from collections import namedtuple
+from itertools import product
 from typing import Callable, Sequence, Dict
 import time
 
@@ -8,9 +9,10 @@ import ignite
 
 from torch import Tensor, LongTensor
 from torch.nn import Module, DataParallel
-from torch.utils.data import DataLoader, Dataset, TensorDataset, ConcatDataset, RandomSampler, random_split
+from torch.utils.data import DataLoader, Dataset, TensorDataset, ConcatDataset, RandomSampler, random_split, Subset
+from torch.optim import Optimizer, ASGD, Adagrad, Adadelta, Adam, SGD, RMSprop, Rprop
 from ignite.engine import Events, Engine, State
-from ignite.handlers import EarlyStopping
+from ignite.handlers import EarlyStopping, Timer
 from ignite.metrics import Loss, BinaryAccuracy, Precision, Recall
 from sockpuppet.model.nn import ContextualLSTM
 from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
