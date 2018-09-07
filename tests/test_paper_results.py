@@ -20,16 +20,16 @@ from sockpuppet.utils import split_integers, expand_binary_class, to_singleton_r
 from tests.marks import *
 
 CHECKPOINT_EVERY = 100
-MAX_EPOCHS = 5
-BATCH_SIZE = 1000
+MAX_EPOCHS = 50
+BATCH_SIZE = 200
 
 NOT_BOT = 0
 BOT = 1
-TRAINING_SPLIT = 0.4
+TRAINING_SPLIT = 0.5
 VALIDATION_SPLIT = 0.1
-TESTING_SPLIT = 0.5
-TRAINER_PATIENCE = 100
-METRIC_THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90, 0.95)
+TESTING_SPLIT = 0.4
+TRAINER_PATIENCE = 7
+METRIC_THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90)
 METRICS = ("accuracy", "precision", "recall")
 
 
