@@ -65,8 +65,7 @@ def training_data(
     bot = SingleLabelDataset(cresci_social_spambots_1_split.training, BOT)
 
     dataset = ConcatDataset([notbot, bot])
-    sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad, pin_memory=True)
+    return DataLoader(dataset=dataset, shuffle=True, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
 
 
 @pytest.fixture(scope="module")
@@ -78,8 +77,7 @@ def validation_data(
     bot = SingleLabelDataset(cresci_social_spambots_1_split.validation, BOT)
 
     dataset = ConcatDataset([notbot, bot])
-    sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad, pin_memory=True)
+    return DataLoader(dataset=dataset, shuffle=True, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
 
 
 @pytest.fixture(scope="module")
@@ -91,8 +89,7 @@ def testing_data(
     bot = SingleLabelDataset(cresci_social_spambots_1_split.testing, BOT)
 
     dataset = ConcatDataset([notbot, bot])
-    sampler = RandomSampler(dataset)
-    return DataLoader(dataset=dataset, sampler=sampler, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad, pin_memory=True)
+    return DataLoader(dataset=dataset, shuffle=True, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
 
 
 def test_split_ratios_add_to_1():
