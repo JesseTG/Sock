@@ -1,6 +1,7 @@
 from collections import namedtuple
 from itertools import product
 from typing import Callable, Sequence, Dict
+import random
 import time
 
 import pytest
@@ -23,74 +24,62 @@ from tests.marks import *
 
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 50
-BATCH_SIZE = 200
+BATCH_SIZE = 500
 
 NOT_BOT = 0
 BOT = 1
 TRAINING_SPLIT = 0.5
-VALIDATION_SPLIT = 0.1
-TESTING_SPLIT = 0.4
-TRAINER_PATIENCE = 7
+VALIDATION_SPLIT = 0.2
+TESTING_SPLIT = 0.3
+TRAINER_PATIENCE = 10
+SCHEDULER_PATIENCE = 3
+NUM_TWEETS_PER_CLASS = 25000
 METRIC_THRESHOLDS = (0.50, 0.60, 0.70, 0.80, 0.90)
 METRICS = ("accuracy", "precision", "recall")
 
 
+def _make_splits(dataset: Dataset):
+    indices = random.sample(range(len(dataset)), NUM_TWEETS_PER_CLASS)
+    data = Subset(dataset, indices)
+    length = len(data)
+    split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
+
+    splits = random_split(data, split_lengths)
+
+    return Splits(data, *splits)
+
+
 @pytest.fixture(scope="module")
 def cresci_genuine_accounts_split(cresci_genuine_accounts_tweets_tensors: CresciTensorTweetDataset):
-    data = Subset(cresci_genuine_accounts_tweets_tensors, range(10000))
-    length = len(data)
-    split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
-
-    splits = random_split(data, split_lengths)
-
-    return Splits(data, *splits)
+    return _make_splits(cresci_genuine_accounts_tweets_tensors)
 
 
 @pytest.fixture(scope="module")
-def cresci_social_spambots_1_split(cresci_social_spambots_1_tweets_tensors):
-    data = Subset(cresci_social_spambots_1_tweets_tensors, range(10000))
-    length = len(data)
-    split_lengths = split_integers(length, (TRAINING_SPLIT, VALIDATION_SPLIT, TESTING_SPLIT))
-
-    splits = random_split(data, split_lengths)
-
-    return Splits(data, *splits)
+def nbc_split(nbc_tweets_tensors: NbcTweetTensorDataset):
+    return _make_splits(nbc_tweets_tensors)
 
 
-@pytest.fixture(scope="module")
-def training_data(
-    cresci_genuine_accounts_split: Splits,
-    cresci_social_spambots_1_split: Splits
-):
-    notbot = SingleLabelDataset(cresci_genuine_accounts_split.training, NOT_BOT)
-    bot = SingleLabelDataset(cresci_social_spambots_1_split.training, BOT)
+def _make_loader(notbot_splits: Splits, bot_splits: Splits, subset: str):
+    notbot = SingleLabelDataset(getattr(notbot_splits, subset), NOT_BOT)
+    bot = SingleLabelDataset(getattr(bot_splits, subset), BOT)
 
     dataset = ConcatDataset([notbot, bot])
     return DataLoader(dataset=dataset, shuffle=True, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
 
 
 @pytest.fixture(scope="module")
-def validation_data(
-    cresci_genuine_accounts_split: Splits,
-    cresci_social_spambots_1_split: Splits
-):
-    notbot = SingleLabelDataset(cresci_genuine_accounts_split.validation, NOT_BOT)
-    bot = SingleLabelDataset(cresci_social_spambots_1_split.validation, BOT)
-
-    dataset = ConcatDataset([notbot, bot])
-    return DataLoader(dataset=dataset, shuffle=True, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
+def training_data(cresci_genuine_accounts_split: Splits, nbc_split: Splits,):
+    return _make_loader(cresci_genuine_accounts_split, nbc_split, "training")
 
 
 @pytest.fixture(scope="module")
-def testing_data(
-    cresci_genuine_accounts_split: Splits,
-    cresci_social_spambots_1_split: Splits
-):
-    notbot = SingleLabelDataset(cresci_genuine_accounts_split.testing, NOT_BOT)
-    bot = SingleLabelDataset(cresci_social_spambots_1_split.testing, BOT)
+def validation_data(cresci_genuine_accounts_split: Splits, nbc_split: Splits):
+    return _make_loader(cresci_genuine_accounts_split, nbc_split, "validation")
 
-    dataset = ConcatDataset([notbot, bot])
-    return DataLoader(dataset=dataset, shuffle=True, batch_size=BATCH_SIZE, collate_fn=sentence_label_pad)
+
+@pytest.fixture(scope="module")
+def testing_data(cresci_genuine_accounts_split: Splits, nbc_split: Splits):
+    return _make_loader(cresci_genuine_accounts_split, nbc_split, "testing")
 
 
 def test_split_ratios_add_to_1():
@@ -109,11 +98,11 @@ def test_cresci_genuine_accounts_split_add_up(cresci_genuine_accounts_split: Spl
 
 
 @modes("cuda")
-def test_cresci_social_spambots_1_split_add_up(cresci_social_spambots_1_split: Splits):
-    total = len(cresci_social_spambots_1_split.full)
-    training_split = len(cresci_social_spambots_1_split.training)
-    validation_split = len(cresci_social_spambots_1_split.validation)
-    testing_split = len(cresci_social_spambots_1_split.testing)
+def test_bot_split_add_up(nbc_split: Splits):
+    total = len(nbc_split.full)
+    training_split = len(nbc_split.training)
+    validation_split = len(nbc_split.validation)
+    testing_split = len(nbc_split.testing)
 
     assert training_split + validation_split + testing_split == total
 
@@ -129,16 +118,17 @@ def model(mode: str, device: torch.device, glove_embedding: WordEmbeddings):
 
 
 @pytest.fixture(scope="module", params=[
-    pytest.param((ASGD, {"lr": 0.1}), id="ASGD"),
-    pytest.param((Adagrad, {"lr": 0.1}), id="Adagrad"),
-    pytest.param((Adadelta, {}), id="Adadelta"),
-    pytest.param((Adam, {}), id="Adam"),
-    pytest.param((Adam, {"lr": 0.01}), id="Adam(lr=0.01)"),
-    pytest.param((Adam, {"lr": 0.1}), id="Adam(lr=0.1)"),
-    pytest.param((SGD, {"lr": 0.1, "momentum": 0.9, "nesterov": True}), id="SGD"),
-    pytest.param((RMSprop, {}), id="RMSprop-no-momentum"),
-    pytest.param((RMSprop, {"momentum": 0.9}), id="RMSprop-momentum"),
-    pytest.param((Rprop, {}), id="Rprop"),
+    pytest.param((ASGD, {"lr": 0.1}), id="ASGD", marks=pytest.mark.ASGD),
+    pytest.param((Adagrad, {"lr": 0.1}), id="Adagrad", marks=pytest.mark.Adagrad),
+    pytest.param((Adadelta, {}), id="Adadelta", marks=pytest.mark.Adadelta),
+    pytest.param((Adam, {}), id="Adam", marks=pytest.mark.Adam),
+    pytest.param((Adam, {"lr": 0.01}), id="Adam(lr=0.01)", marks=pytest.mark.Adam),
+    pytest.param((Adam, {"lr": 0.1}), id="Adam(lr=0.1)", marks=pytest.mark.Adam),
+    pytest.param((SGD, {"lr": 0.1, "momentum": 0.9, "nesterov": True}), id="SGD(lr=0.1)", marks=pytest.mark.SGD),
+    pytest.param((SGD, {"lr": 0.01, "momentum": 0.9, "nesterov": True}), id="SGD(lr=0.01)", marks=pytest.mark.SGD),
+    pytest.param((RMSprop, {}), id="RMSprop(momentum=False)", marks=pytest.mark.RMSprop),
+    pytest.param((RMSprop, {"momentum": 0.9}), id="RMSprop(momentum=True)", marks=pytest.mark.RMSprop),
+    pytest.param((Rprop, {}), id="Rprop", marks=pytest.mark.Rprop),
 ])
 def optimizer(request, model: Module):
     return request.param[0](model.parameters(), **request.param[1])
@@ -163,12 +153,14 @@ def evaluator(trainer: Engine, device: torch.device):
 
 
 @pytest.fixture(scope="module")
-def trained_model(request, trainer: Engine, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
+def trained_model(request, trainer: Engine, optimizer, evaluator: Engine, training_data: DataLoader, validation_data: DataLoader):
 
     @trainer.on(Events.STARTED)
     def init_metrics(trainer: Engine):
         trainer.state.training_metrics = Metrics([], [], [], [])
         trainer.state.validation_metrics = Metrics([], [], [], [])
+
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=SCHEDULER_PATIENCE)
 
     @trainer.on(Events.EPOCH_COMPLETED)
     def validate(trainer: Engine):
@@ -183,6 +175,7 @@ def trained_model(request, trainer: Engine, evaluator: Engine, training_data: Da
         trainer.state.validation_metrics.accuracy.append(validation_metrics["accuracy"])
         trainer.state.validation_metrics.recall.append(validation_metrics["recall"])
         trainer.state.validation_metrics.precision.append(validation_metrics["precision"])
+        scheduler.step(validation_metrics["loss"])
 
     timer = Timer(average=True)
 
