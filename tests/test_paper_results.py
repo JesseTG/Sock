@@ -68,7 +68,7 @@ def _make_loader(notbot_splits: Splits, bot_splits: Splits, subset: str):
 
 
 @pytest.fixture(scope="module")
-def training_data(cresci_genuine_accounts_split: Splits, nbc_split: Splits,):
+def training_data(cresci_genuine_accounts_split: Splits, nbc_split: Splits):
     return _make_loader(cresci_genuine_accounts_split, nbc_split, "training")
 
 
