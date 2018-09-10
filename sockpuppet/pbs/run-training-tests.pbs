@@ -1,0 +1,11 @@
+#!/bin/bash
+#PBS -keo
+#PBS -qgpu-long
+#PBS -l nodes=1:ppn=28,walltime=48:00:00
+
+module load shared
+module load anaconda/.anaconda
+
+cd "$HOME/code/Sock-Puppet"
+
+python3 -W ignore::RuntimeWarning -m pytest -lsv --color=yes tests/test_paper_results.py
