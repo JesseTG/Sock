@@ -99,12 +99,20 @@ def pytest_terminal_summary(terminalreporter, exitstatus):
         terminalreporter.line(report.nodeid)
         terminalreporter.line(f"{state.epoch} / {state.max_epochs} epochs, {state.iteration} iterations")
         terminalreporter.line(f"Time:\t{state.duration:.3f}s")
-        terminalreporter.line(f"Accuracy:\ttrain={train.accuracy[-1]:.5f}, valid={valid.accuracy[-1]:.5f}")
-        terminalreporter.line(f"Precision:\ttrain={train.precision[-1]:.5f}, valid={valid.precision[-1]:.5f}")
-        terminalreporter.line(f"Recall:\ttrain={train.recall[-1]:.5f}, valid={valid.recall[-1]:.5f}")
-        terminalreporter.line(f"Loss:\ttrain={train.loss[-1]:.5f}, valid={valid.loss[-1]:.5f}")
+
+        if train.accuracy and valid.accuracy:
+            terminalreporter.line(f"Accuracy:\ttrain={train.accuracy[-1]:.5f}, valid={valid.accuracy[-1]:.5f}")
+
+        if train.precision and valid.precision:
+            terminalreporter.line(f"Precision:\ttrain={train.precision[-1]:.5f}, valid={valid.precision[-1]:.5f}")
+
+        if train.recall and valid.recall:
+            terminalreporter.line(f"Recall:\ttrain={train.recall[-1]:.5f}, valid={valid.recall[-1]:.5f}")
+
+        if train.loss and valid.loss:
+            terminalreporter.line(f"Loss:\ttrain={train.loss[-1]:.5f}, valid={valid.loss[-1]:.5f}")
+
         terminalreporter.line("")
-        # TODO: Report running time
 
 
 @pytest.fixture
