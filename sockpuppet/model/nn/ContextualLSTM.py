@@ -2,7 +2,7 @@ from typing import Union, Sequence, Tuple
 
 import torch
 from torch import nn
-from torch.nn import Embedding
+from torch.nn import Embedding, Linear, Sequential, ReLU, Sigmoid
 from torch.nn import functional
 from torch.nn.init import normal_
 from torch.nn.utils.rnn import PackedSequence, pack_sequence, pad_sequence, pad_packed_sequence, pack_padded_sequence
@@ -25,21 +25,15 @@ class ContextualLSTM(nn.Module):
         self.embeddings.padding_idx = 0
 
         self.lstm = nn.LSTM(word_embeddings.dim, hidden_layers, batch_first=False)
-        self.dense1 = nn.Linear(hidden_layers, 128)
-        # set input features to hidden_layers + num of metadata elements
-        self.dense2 = nn.Linear(self.dense1.out_features, 64)
-        self.output = nn.Linear(self.dense2.out_features, 1)
 
-        normal_(self.dense1.weight)
-        normal_(self.dense1.bias)
-        normal_(self.dense2.weight)
-        normal_(self.dense2.bias)
-        normal_(self.lstm.weight_ih_l0)
-        normal_(self.lstm.bias_ih_l0)
-        normal_(self.lstm.weight_hh_l0)
-        normal_(self.lstm.bias_hh_l0)
-        normal_(self.output.weight)
-        normal_(self.output.bias)
+        self.output = nn.Sequential(
+            Linear(hidden_layers, 128),
+            ReLU(),
+            Linear(128, 64),
+            ReLU(),
+            Linear(64, 1),
+            Sigmoid()
+        )
 
         self.to(device, non_blocking=True)
         # is there a layer that takes the weighted average of two like-shaped tensors? would be useful
@@ -48,7 +42,7 @@ class ContextualLSTM(nn.Module):
 
     @property
     def device(self) -> torch.device:
-        return self.dense1.weight.device
+        return self.embeddings.weight.device
 
     def _init_hidden(self, batch_size) -> Tuple[Tensor, Tensor]:
         def make_zeros():
@@ -87,9 +81,12 @@ class ContextualLSTM(nn.Module):
         hn = hn.view(num_sentences, self.lstm.hidden_size)
         # Only using one LSTM layer
 
-        a = functional.relu(self.dense1(hn))  # Size([???]) -> Size([???])
-        b = functional.relu(self.dense2(a))  # Size([???]) -> Size([???])
-        c = torch.sigmoid(self.output(b))  # Size([???]) -> Size([num_tweets, 1])
-        return c.view(num_sentences)
+        result = self.output(hn)
+
+        return result.view(num_sentences)
+        # a = functional.relu(self.dense1(hn))  # Size([???]) -> Size([???])
+        # b = functional.relu(self.dense2(a))  # Size([???]) -> Size([???])
+        # c = torch.sigmoid(self.output(b))  # Size([???]) -> Size([num_tweets, 1])
+        # return c.view(num_sentences)
         # TODO: Consider using BCEWithLogitsLoss
         # TODO: What optimizer did the paper use?  What loss function?
