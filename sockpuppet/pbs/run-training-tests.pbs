@@ -8,4 +8,4 @@ module load anaconda/.anaconda
 
 cd "$HOME/code/Sock-Puppet"
 
-python3 -W ignore::RuntimeWarning -m pytest -lsv --color=yes tests/test_full_training.py
+python3 -W ignore::RuntimeWarning -m pytest -lsv -m "(ASGD or Adagrad or Adadelta or Adam) and cuda" --color=yes tests/test_full_training.py
