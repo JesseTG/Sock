@@ -36,6 +36,8 @@ USER_COLUMN_TYPES = {
     "verified": bool
 }
 
+# TODO: Allow use of either a path or an open file object
+
 
 class CresciTweetDataset(TweetDataset):
     def __init__(self, path: str):
