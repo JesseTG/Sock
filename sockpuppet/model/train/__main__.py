@@ -68,7 +68,7 @@ def build_parser() -> ArgumentParser:
         "--glove",
         help="The word vector embeddings to use",
         metavar="path",
-        type=FileType('r'),
+        type=FileType('r', encoding="utf8"),
         required=True
     )
 
@@ -76,7 +76,7 @@ def build_parser() -> ArgumentParser:
         "--bots",
         help="One or more files containing tweets known to be from bots",
         metavar="path",
-        type=FileType('r'),
+        type=FileType('r', encoding="utf8"),
         nargs="+",
         required=True
     )
@@ -85,7 +85,7 @@ def build_parser() -> ArgumentParser:
         "--humans",
         help="One or more files containing tweets known to be from humans",
         metavar="path",
-        type=FileType('r'),
+        type=FileType('r', encoding="utf8"),
         nargs="+",
         required=True
     )
