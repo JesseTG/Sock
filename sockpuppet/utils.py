@@ -79,3 +79,7 @@ TORCH_DTYPES = {
 
 Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
 Metrics = namedtuple("Metrics", ("accuracy", "loss", "precision", "recall"))
+
+
+NOT_BOT = 0
+BOT = 1
