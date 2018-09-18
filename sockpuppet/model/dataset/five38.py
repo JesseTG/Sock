@@ -7,7 +7,7 @@ import numpy
 import pandas
 import torch
 from torch import Tensor
-from torch.utils.data.dataset import Dataset
+from torch.utils.data import Dataset
 
 from sockpuppet.model.data import WordEmbeddings
 from .common import _to_int, TweetTensorDataset
