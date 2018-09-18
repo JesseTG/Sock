@@ -14,6 +14,7 @@ TORCH_INT_DTYPES = (torch.uint8, torch.int8, torch.short, torch.int, torch.long)
 
 class WordEmbeddings:
     def __init__(self, path: Union[DataFrame, str, io.IOBase], device="cpu"):
+        # TODO: Simplify this if-else
         if isinstance(path, str):
             with open(path, "r") as file:
                 data = self._load_frame(file)
@@ -26,6 +27,12 @@ class WordEmbeddings:
 
         # self.words = data[0]
         # No need to keep around the wordlist separately, but if so we can just keep the dataframe
+
+        if data[0][0] != "<pad>":
+            raise ValueError(f"First word must be '<pad>', but it's {data[0][0]}")
+
+        if data[0][1] != "<unk>":
+            raise ValueError(f"Second word must be '<unk>', but it's {data[0][1]}")
 
         self._dim = int(data.get_dtype_counts().float64)
         self.vectors = torch.as_tensor(data.iloc[:, 1:].values, dtype=torch.float, device=device)  # type: Tensor
