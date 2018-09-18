@@ -1,5 +1,6 @@
 import csv
 import sys
+from io import IOBase
 from typing import Callable, Sequence, Tuple, Union
 from numbers import Integral
 
@@ -40,7 +41,7 @@ USER_COLUMN_TYPES = {
 
 
 class CresciTweetDataset(TweetDataset):
-    def __init__(self, path: str):
+    def __init__(self, path: Union[str, IOBase]):
         self.data = pandas.read_csv(
             path,
             dtype=TWEET_COLUMN_TYPES,
