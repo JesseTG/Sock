@@ -90,3 +90,16 @@ class ContextualLSTM(nn.Module):
         # return c.view(num_sentences)
         # TODO: Consider using BCEWithLogitsLoss
         # TODO: What optimizer did the paper use?  What loss function?
+
+
+def save(model: ContextualLSTM, out: Union[str]):
+    state = model.state_dict()  # type: dict
+    del state["embeddings.weight"]
+    torch.save(state, out)
+
+
+def load(embeddings: WordEmbeddings, path, device) -> ContextualLSTM:
+    model = ContextualLSTM(embeddings)
+    state = torch.load(path, device)
+    model.load_state_dict(state, strict=False)
+    return model
