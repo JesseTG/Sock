@@ -115,3 +115,4 @@ package-lock.json
 .git
 .vscode
 .benchmarks
+sockpuppet/static/
