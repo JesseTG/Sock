@@ -15,5 +15,5 @@ cpu = pytest.mark.cpu
 cuda = pytest.mark.cuda
 dp = pytest.mark.dp
 report_metrics = pytest.mark.report_metrics
-
+keep_saved = pytest.mark.keep_saved
 # TODO: Add a mark for skipping test for which a required file doesn't exist
