@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#PBS -k eo
+#PBS -l nodes=1:ppn=28,walltime=48:00:00
+#PBS -q long
+#PBS -t 0-5
+
+module load shared
+module load anaconda/.anaconda
+
+WORKING_DIR="$HOME/code/Sock-Puppet"
+mkdir -p "$WORKING_DIR"
+cd "$WORKING_DIR"
+
+# for each line of archive
+#  cat bots to bots.txt and humans to humans.txt
+#
+# then squash them
+
+function squash-7z() {
+    echo "Converting $1 to squashfs archive"
+
+    ARCHIVE_BASENAME="$(basename -s$2 "$1")"
+    mkdir -p "$ARCHIVE_BASENAME"
+
+    while read -r json; do
+        # For each line in the compressed 7z file...
+        ID_STR="$(echo "$json" | jq -r .id_str | printf "%.20d" $(cat /dev/stdin))"
+        # Zero-padded ID, up to 20 digits (because 2^64 has 20 digits)
+        ID_GROUPS="$(echo $ID_STR | sed -r 's|([0-9]{4})|\1/|g')"
+        # Format ID_STR into 5 groups of 4, including leading 0s
+        
+        ID_DIR="$(dirname $ID_GROUPS)"
+        ID_NAME="$(basename $ID_GROUPS)"
+        mkdir -p "$ARCHIVE_BASENAME/$ID_DIR"
+        echo "$json" > "$ARCHIVE_BASENAME/$ID_DIR/$ID_NAME.json"
+        echo "$ID_STR" >> "$ARCHIVE_BASENAME/ids"
+    done < <(7z e -so "$1")
+
+    wc -l "$ARCHIVE_BASENAME/ids" > "$ARCHIVE_BASENAME/count"
+    echo "Split $1 into files, making squashfs archive now"
+
+    mksquashfs "$ARCHIVE_BASENAME" "$ARCHIVE_BASENAME.sqfs" -info -no-xattrs -comp xz -b 1M -Xdict-size 100%
+
+    echo "Made squashfs image $ARCHIVE_BASENAME.sqfs"
+
+    rm -rf "$ARCHIVE_BASENAME"
+
+    echo "Removed temp folder $ARCHIVE_BASENAME"
+}
+
+# TODO: Batch dataset into units of 1000 tweets
+
+case "$PBS_ARRAYID" in
+  0) INPUT="$WORKING_DIR/tweets/tweets.00.jsonl.7z" ;;
+  1) INPUT="$WORKING_DIR/tweets/tweets.01.jsonl.7z" ;;
+  2) INPUT="$WORKING_DIR/tweets/tweets.02.jsonl.7z" ;;
+  3) INPUT="$WORKING_DIR/tweets/tweets.03.jsonl.7z" ;;
+  4) INPUT="$WORKING_DIR/tweets/tweets.04.jsonl.7z" ;;
+  5) INPUT="$WORKING_DIR/tweets/tweets.05.jsonl.7z" ;;
+esac
+
+
+squash-7z "$INPUT" ".jsonl.7z"
