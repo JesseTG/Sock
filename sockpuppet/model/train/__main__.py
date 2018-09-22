@@ -18,7 +18,7 @@ from sockpuppet.model.dataset import Five38TweetDataset, NbcTweetDataset, Cresci
 from sockpuppet.model.data import WordEmbeddings, tokenize
 from sockpuppet.model.data.batching import sentence_label_pad, sentence_pad
 from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.nn.ContextualLSTM import save, load
+from sockpuppet.model.serial import save, load
 from sockpuppet.utils import Metrics, Splits, to_singleton_row, expand_binary_class, split_integers, BOT, NOT_BOT
 
 
