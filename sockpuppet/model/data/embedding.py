@@ -1,6 +1,6 @@
 from typing import Sequence, Union, Iterable
 import csv
-import io
+from io import IOBase
 
 import numpy
 import torch
@@ -13,15 +13,11 @@ TORCH_INT_DTYPES = (torch.uint8, torch.int8, torch.short, torch.int, torch.long)
 
 
 class WordEmbeddings:
-    def __init__(self, path: Union[DataFrame, str, io.IOBase], device="cpu"):
-        # TODO: Simplify this if-else
-        if isinstance(path, str):
-            with open(path, "r") as file:
-                data = self._load_frame(file)
+    def __init__(self, path: Union[DataFrame, str, IOBase], device="cpu", pinned=False):
+        if isinstance(path, (str, IOBase)):
+            data = self._load_frame(path)
         elif isinstance(path, DataFrame):
             data = path
-        elif isinstance(path, io.IOBase):
-            data = self._load_frame(path)
         else:
             raise TypeError(f"Expected a str, open file, or DataFrame, got {path}")
 
@@ -37,6 +33,10 @@ class WordEmbeddings:
         self._dim = int(data.get_dtype_counts().float64)
         self.vectors = torch.as_tensor(data.iloc[:, 1:].values, dtype=torch.float, device=device)  # type: Tensor
         self.vectors.requires_grad_(False)
+
+        if pinned:
+            self.vectors = self.vectors.pin_memory()
+
         # [all rows, second column:last column]
 
         # Pinning self.vectors does *not* improve encoding performance
