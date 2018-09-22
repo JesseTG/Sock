@@ -116,3 +116,6 @@ package-lock.json
 .vscode
 .benchmarks
 sockpuppet/static/
+*.pt
+*.pth
+*.pkl
