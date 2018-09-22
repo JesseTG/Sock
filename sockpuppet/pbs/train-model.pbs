@@ -13,4 +13,4 @@ python3 -W ignore::RuntimeWarning -m sockpuppet.model.train \
     --glove "$HOME/data/glove/glove.twitter.27B.${PBS_ARRAYID}d.txt" \
     --bots "$HOME/data/538/tweets.csv" \
     --humans "$HOME/data/cresci-2017/datasets_full.csv/genuine_accounts.csv/tweets.csv" \
-    --output "$HOME/trained-${PBS_ARRAYID}.pkl"
+    --output "$HOME/trained-${PBS_ARRAYID}.pt"
