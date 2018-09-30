@@ -9,7 +9,7 @@ from sockpuppet.model.nn import ContextualLSTM
 
 # All parameters EXCEPT the embeddings are saved to disk
 # The embeddings determine the shapes of some parameters, and load_state_dict needs the shapes to be the same
-
+# TODO: Save the hash of the embeddings
 def save(model: ContextualLSTM, out: Union[str]):
     state = model.state_dict()
     del state["embeddings.weight"]
