@@ -28,6 +28,9 @@ class Config(object):
     CACHE_REDIS_DB = os.environ.get("SOCKPUPPET_REDIS_DB", 0)
     TRAINING_DATA_PATH = os.environ.get("SOCKPUPPET_TRAINING_DATA_PATH", os.path.expanduser("~/data"))
     TRAINED_MODEL_PATH = os.environ.get("SOCKPUPPET_TRAINED_MODEL_PATH")
+    SERVER_BIND_ADDRESS = os.environ.get("SOCKPUPPET_SERVER_BIND_ADDRESS", "tcp://127.0.0.1:5555")
+    WORD_EMBEDDING_PATH = os.environ.get("SOCKPUPPET_WORD_EMBEDDING_PATH")
+    MODEL_DEVICE = os.environ.get("SOCKPUPPET_MODEL_DEVICE", "cpu")
 
 
 class ProdConfig(Config):
@@ -58,3 +61,4 @@ class TestConfig(Config):
     TESTING = True
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
+    SERVER_BIND_ADDRESS = os.environ.get("SOCKPUPPET_SERVER_BIND_ADDRESS", "inproc://test-bind")

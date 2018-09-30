@@ -31,13 +31,13 @@ Flask-DebugToolbar==0.10.1
 # REST API
 flask-restful
 
-# Twitter
-botometer
-
 # Algorithms
-torch>=0.4.1
-pytorch-ignite
+torch>=0.4.*
+pytorch-ignite==0.1.*
+
+# Communication
+pyzmq==17.*  # TODO: What version adds ZMQ 4.0 support?
 
 # Data
-libarchive
-pandas
+pandas==0.23.*
+simplejson

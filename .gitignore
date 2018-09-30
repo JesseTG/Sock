@@ -6,6 +6,7 @@ sockpuppet/__pycache__
 sockpuppet/*/__pycache__
 sockpuppet/*/*/__pycache__
 tests/__pycache__
+tests/*/__pycache__
 
 # C extensions
 *.so
