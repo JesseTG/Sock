@@ -145,6 +145,35 @@ def test_lstm_returns_1d_float_tensor(lstm: ContextualLSTM, device: torch.device
     assert result.shape == torch.Size([len(encoding[0])])
 
 
+def test_lstm_in_training_mode_by_default(lstm: ContextualLSTM):
+    assert lstm.training
+
+
+def test_lstm_eval_sets_eval_mode(lstm: ContextualLSTM):
+    lstm.eval()
+
+    assert not lstm.training
+
+
+def test_lstm_train_false_sets_eval_mode(lstm: ContextualLSTM):
+    lstm.train(False)
+
+    assert not lstm.training
+
+
+def test_lstm_results_have_no_gradient_with_no_grad(lstm: ContextualLSTM, device: torch.device):
+    encoding = sentence_pad([
+        torch.tensor([0, 1, 5, 8, 3, 1], dtype=torch.long, device=device),
+        torch.tensor([1, 4, 6, 1, 9, 7], dtype=torch.long, device=device),
+        torch.tensor([9, 0, 6, 9, 9, 0], dtype=torch.long, device=device),
+        torch.tensor([2, 3, 6, 1, 2, 4], dtype=torch.long, device=device),
+    ])
+
+    with torch.no_grad():
+        result = lstm(encoding)
+        assert not result.requires_grad
+
+
 def test_get_lstm_cpu(request, lstm_cpu: ContextualLSTM):
     assert lstm_cpu is not None
     assert type(lstm_cpu) == ContextualLSTM
