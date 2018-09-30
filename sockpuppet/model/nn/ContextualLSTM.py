@@ -102,4 +102,6 @@ def load(embeddings: WordEmbeddings, path, device) -> ContextualLSTM:
     model = ContextualLSTM(embeddings)
     state = torch.load(path, device)
     model.load_state_dict(state, strict=False)
+    model.train(False)
+
     return model
