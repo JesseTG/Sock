@@ -23,6 +23,9 @@ DEFAULT_TIMEOUT = 3000  # ms
 @pytest.fixture(scope="module")
 def context():
     instance = Context.instance()  # type: Context
+    log_handler = PUBHandler("tcp://*:5558", context=instance)
+    logging.getLogger().addHandler(log_handler)
+
     return instance
 
 
@@ -34,6 +37,21 @@ async def client(context: Context):
     yield socket
 
     socket.close()
+
+
+@pytest.fixture(scope="function")
+async def clients(context: Context):
+    def make_socket():
+        socket = context.socket(zmq.REQ)
+        socket.connect(TestConfig.SERVER_BIND_ADDRESS)
+        return socket
+
+    sockets = tuple(make_socket() for i in range(10))
+
+    yield sockets
+
+    for s in sockets:
+        s.close()
 
 
 @pytest.fixture(scope="function")
@@ -142,13 +160,67 @@ async def test_server_rejects_bad_request(client: Socket, input: bytes):
     assert len(response) == 0
 
 
-def test_server_handles_multiple_clients_at_once(client: Socket):
-    pytest.xfail()
+@pytest.mark.asyncio
+@pytest.mark.usefixture("server")
+async def test_server_handles_concurrent_connections_sequential(clients: Sequence[Socket]):
+    for i, socket in enumerate(clients, start=1):
+        message = [str(i)] * i
+        assert (await socket.send_json(message)) is None
+
+        events = await socket.poll(timeout=DEFAULT_TIMEOUT)
+        assert events == 1
+
+        response = await socket.recv_json()
+        assert response is not None
+        assert isinstance(response, Sequence)
+        assert len(response) == i
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixture("server")
+async def test_server_handles_concurrent_connections_interleaved(clients: Sequence[Socket]):
+    for i, socket in enumerate(clients, start=1):
+        message = [str(i)] * i
+        assert (await socket.send_json(message)) is None
+
+    for i, socket in enumerate(clients, start=1):
+        events = await socket.poll(timeout=DEFAULT_TIMEOUT)
+        assert events == 1
+
+    for i, socket in enumerate(clients, start=1):
+        response = await socket.recv_json()
+        assert response is not None
+        assert isinstance(response, Sequence)
+        assert len(response) == i
+
+
+# @pytest.mark.asyncio
+# async def test_server_handles_parallel_connections(server: Thread, context: Context):
+#     pytest.xfail()
+#     # TODO: Make N threads, spawn a socket on each thread and make a request each
 
 
 def test_server_sends_responses_to_correct_clients(client: Socket):
     pytest.xfail()
 
 
-def test_server_survives_dead_client(client: Socket):
-    pytest.xfail()
+@pytest.mark.asyncio
+@pytest.mark.usefixture("server")
+async def test_server_survives_dead_client(client: Socket, context: Context):
+    request1 = jsonmod.loads(read_text("tests.data", "1-request.json"))
+    request2 = jsonmod.loads(read_text("tests.data", "2-request.json"))
+
+    dying_socket = context.socket(zmq.REQ)
+    dying_socket.connect(TestConfig.SERVER_BIND_ADDRESS)
+
+    assert (await dying_socket.send_json(request1)) is None
+
+    dying_socket.close()
+
+    assert (await client.send_json(request2)) is None
+
+    events = await client.poll(timeout=DEFAULT_TIMEOUT)
+    assert events == 1
+
+    response = await client.recv_json()
+    assert len(response) == len(request2)
