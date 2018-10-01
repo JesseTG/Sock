@@ -26,24 +26,6 @@ from sockpuppet.settings import DevConfig, ProdConfig
 
 CONFIG = DevConfig if __debug__ else ProdConfig
 
-# while true:
-#  listen to requests
-#  if request is valid:
-#    guess each tweet, spit back response
-
-
-class GuessRequest:
-    def __init__(self, tweets: Sequence[str]):
-        self.version = 0
-        self.tweets = tweets
-
-
-def deserialize(frames: Sequence[Frame]):
-    return frames
-
-
-def serialize() -> Sequence[Frame]:
-    pass
 
 async def main(embeddings: WordEmbeddings, model: ContextualLSTM, address: str, event: Event, context: Context):
     # TODO: Make logging configurable
