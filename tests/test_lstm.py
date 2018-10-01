@@ -1,9 +1,9 @@
 import pytest
 import torch
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.data import sentence_label_pad, sentence_pad, WordEmbeddings
-
 from tests.marks import *
+
+from sockpuppet.model.data import WordEmbeddings, sentence_label_pad, sentence_pad
+from sockpuppet.model.nn import ContextualLSTM
 
 
 @modes("cpu", "cuda")

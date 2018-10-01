@@ -3,25 +3,24 @@
 
 
 import asyncio
-from enum import Enum
 import logging
 import signal
-from threading import Event
 import time
-import torch
-from torch import Tensor
+from enum import Enum
+from threading import Event
 from typing import Sequence
 
-
+import torch
 import zmq
-from zmq import Frame, ZMQError
-from zmq.log.handlers import PUBHandler
-from zmq.asyncio import Context, Socket, Poller
 from simplejson.errors import JSONDecodeError
+from torch import Tensor
+from zmq import Frame, ZMQError
+from zmq.asyncio import Context, Poller, Socket
+from zmq.log.handlers import PUBHandler
 
-from sockpuppet.model.data import WordEmbeddings, sentence_pad, PaddedSequence
+from sockpuppet.model.data import PaddedSequence, WordEmbeddings, sentence_pad
 from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.serial import save, load
+from sockpuppet.model.serial import load, save
 from sockpuppet.settings import DevConfig, ProdConfig
 
 CONFIG = DevConfig if __debug__ else ProdConfig

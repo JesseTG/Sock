@@ -1,25 +1,25 @@
 import argparse
-from argparse import FileType, ArgumentParser, ArgumentTypeError
 import logging
 import math
 import random
-
-import torch
-from torch.optim import Optimizer, Adam
-from torch.utils.data import Dataset, ConcatDataset, random_split, DataLoader, Subset
-from torch.nn import Module
+from argparse import ArgumentParser, ArgumentTypeError, FileType
 
 import ignite
-from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator, Engine, State
+import torch
+from ignite.engine import Engine, Events, State, create_supervised_evaluator, create_supervised_trainer
 from ignite.handlers import EarlyStopping, Timer
-from ignite.metrics import Loss, BinaryAccuracy, Precision, Recall
+from ignite.metrics import BinaryAccuracy, Loss, Precision, Recall
+from torch.nn import Module
+from torch.optim import Adam, Optimizer
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, Subset, random_split
 
-from sockpuppet.model.dataset import Five38TweetDataset, NbcTweetDataset, CresciTweetDataset, TweetTensorDataset, SingleLabelDataset, LabelDataset
 from sockpuppet.model.data import WordEmbeddings, tokenize
 from sockpuppet.model.data.batching import sentence_label_pad, sentence_pad
+from sockpuppet.model.dataset import (CresciTweetDataset, Five38TweetDataset, LabelDataset, NbcTweetDataset,
+                                      SingleLabelDataset, TweetTensorDataset)
 from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.serial import save, load
-from sockpuppet.utils import Metrics, Splits, to_singleton_row, expand_binary_class, split_integers, BOT, NOT_BOT
+from sockpuppet.model.serial import load, save
+from sockpuppet.utils import BOT, NOT_BOT, Metrics, Splits, expand_binary_class, split_integers, to_singleton_row
 
 
 def positive_int(arg: str) -> int:

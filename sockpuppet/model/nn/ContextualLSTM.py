@@ -1,17 +1,15 @@
-from typing import Union, Sequence, Tuple
+from typing import Sequence, Tuple, Union
 
 import torch
-from torch import nn
-from torch.nn import Embedding, Linear, Sequential, ReLU, Sigmoid
-from torch.nn import functional
+from torch import LongTensor, Tensor
+from torch.nn import LSTM, Embedding, Linear, Module, ReLU, Sequential, Sigmoid, functional
 from torch.nn.init import normal_
-from torch.nn.utils.rnn import PackedSequence, pack_sequence, pad_sequence, pad_packed_sequence, pack_padded_sequence
-from torch import Tensor, LongTensor
+from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence, pack_sequence, pad_packed_sequence, pad_sequence
 
 from sockpuppet.model.data import WordEmbeddings
 
 
-class ContextualLSTM(nn.Module):
+class ContextualLSTM(Module):
     def __init__(
         self,
         word_embeddings: WordEmbeddings,
@@ -24,9 +22,9 @@ class ContextualLSTM(nn.Module):
         self.embeddings = self.word_embeddings.to_layer()  # type: Embedding
         self.embeddings.padding_idx = 0
 
-        self.lstm = nn.LSTM(word_embeddings.dim, hidden_layers, batch_first=False)
+        self.lstm = LSTM(word_embeddings.dim, hidden_layers, batch_first=False)
 
-        self.output = nn.Sequential(
+        self.output = Sequential(
             Linear(hidden_layers, 128),
             ReLU(),
             Linear(128, 64),

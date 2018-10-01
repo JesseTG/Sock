@@ -1,26 +1,26 @@
-from collections import namedtuple
-from itertools import product
-from typing import Callable, Sequence, Dict
 import random
 import time
+from collections import namedtuple
+from itertools import product
+from typing import Callable, Dict, Sequence
 
+import ignite
 import pytest
 import torch
-import ignite
-
-from torch import Tensor, LongTensor
-from torch.nn import Module, DataParallel
-from torch.utils.data import DataLoader, Dataset, TensorDataset, ConcatDataset, RandomSampler, random_split, Subset
-from torch.optim import Optimizer, ASGD, Adagrad, Adadelta, Adam, SGD, RMSprop, Rprop
-from ignite.engine import Events, Engine, State
+from ignite.engine import Engine, Events, State
 from ignite.handlers import EarlyStopping, Timer
-from ignite.metrics import Loss, BinaryAccuracy, Precision, Recall
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
-from sockpuppet.model.dataset import CresciTensorTweetDataset, NbcTweetTensorDataset, Five38TweetTensorDataset
-from sockpuppet.model.data import sentence_pad, sentence_label_pad, WordEmbeddings
-from sockpuppet.utils import split_integers, expand_binary_class, to_singleton_row, Splits, Metrics
+from ignite.metrics import BinaryAccuracy, Loss, Precision, Recall
 from tests.marks import *
+from torch import LongTensor, Tensor
+from torch.nn import DataParallel, Module
+from torch.optim import ASGD, SGD, Adadelta, Adagrad, Adam, Optimizer, RMSprop, Rprop
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, RandomSampler, Subset, TensorDataset, random_split
+
+from sockpuppet.model.data import WordEmbeddings, sentence_label_pad, sentence_pad
+from sockpuppet.model.dataset import CresciTensorTweetDataset, Five38TweetTensorDataset, NbcTweetTensorDataset
+from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
+from sockpuppet.model.nn import ContextualLSTM
+from sockpuppet.utils import Metrics, Splits, expand_binary_class, split_integers, to_singleton_row
 
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 50

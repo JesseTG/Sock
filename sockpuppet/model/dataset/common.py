@@ -1,7 +1,7 @@
 import csv
 import sys
-from typing import Callable, Sequence, Tuple, Union
 from numbers import Integral
+from typing import Callable, Sequence, Tuple, Union
 
 import numpy
 import torch

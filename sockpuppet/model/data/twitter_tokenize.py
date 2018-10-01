@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from typing import List
-import re
 import fileinput
+import re
+from typing import List
 
 eyes = "[8:=;]"
 nose = "['`-]?"

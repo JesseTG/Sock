@@ -1,21 +1,21 @@
-from typing import Callable, Sequence, Tuple
-from collections import namedtuple
 import time
+from collections import namedtuple
+from typing import Callable, Sequence, Tuple
 
+import ignite
+import ignite.metrics
 import pytest
 import torch
-import ignite
+from ignite.engine import Engine, Events
 from pandas import DataFrame
-
-from torch import Tensor, LongTensor
-from torch.utils.data import DataLoader, Dataset, TensorDataset
+from tests.marks import *
+from torch import LongTensor, Tensor
 from torch.nn.utils.rnn import pad_sequence
-from ignite.engine import Events, Engine
-import ignite.metrics
-from sockpuppet.model.nn import ContextualLSTM
+from torch.utils.data import DataLoader, Dataset, TensorDataset
+
 from sockpuppet.model.data import WordEmbeddings, sentence_label_pad
 from sockpuppet.model.dataset import LabelDataset
-from tests.marks import *
+from sockpuppet.model.nn import ContextualLSTM
 
 BATCH_SIZES = [100, 250, 500, 1000]
 VALIDATE_EVERY = 100

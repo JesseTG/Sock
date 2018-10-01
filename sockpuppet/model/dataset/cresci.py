@@ -1,8 +1,8 @@
 import csv
 import sys
 from io import IOBase
-from typing import Callable, Sequence, Tuple, Union
 from numbers import Integral
+from typing import Callable, Sequence, Tuple, Union
 
 import numpy
 import pandas
@@ -11,6 +11,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 from sockpuppet.model.data import WordEmbeddings
+
 from .common import TweetDataset, TweetTensorDataset, _to_int
 
 TWEET_COLUMN_TYPES = {

@@ -1,8 +1,9 @@
-from typing import Sequence, Union, Tuple
 from collections import namedtuple
+from typing import Sequence, Tuple, Union
+
 import torch
-from torch import Tensor, LongTensor
-from torch.nn.utils.rnn import pad_sequence, pack_sequence
+from torch import LongTensor, Tensor
+from torch.nn.utils.rnn import pack_sequence, pad_sequence
 
 PackedSentences = namedtuple("PackedSentences", ["packed", "lengths"])
 PaddedSequence = namedtuple("PaddedSequence", ["data", "lengths"])

@@ -1,15 +1,14 @@
-import os.path
 import lzma
-import pytest
+import os.path
 import shutil
 
+import pytest
 import torch
-
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.data import WordEmbeddings
-from sockpuppet.model.serial import save, load
-
 from tests.marks import *
+
+from sockpuppet.model.data import WordEmbeddings
+from sockpuppet.model.nn import ContextualLSTM
+from sockpuppet.model.serial import load, save
 
 
 @pytest.fixture

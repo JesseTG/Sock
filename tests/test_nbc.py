@@ -1,7 +1,8 @@
 import pytest
 import torch
+
+from sockpuppet.model.data import WordEmbeddings, tokenize
 from sockpuppet.model.dataset.nbc import NbcTweetDataset, NbcTweetTensorDataset
-from sockpuppet.model.data import tokenize, WordEmbeddings
 
 from .marks import *
 

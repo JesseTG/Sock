@@ -1,4 +1,5 @@
 import pytest
+
 from sockpuppet.model.data import tokenize
 
 

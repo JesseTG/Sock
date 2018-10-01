@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
 """Helper utilities and decorators."""
 
-from functools import lru_cache
 from collections import defaultdict, namedtuple
+from functools import lru_cache
+from typing import Dict, List, Sequence, Tuple
+
 import torch
 from torch import Tensor
-from typing import List, Sequence, Dict, Tuple
-from flask import flash
-
-
-def flash_errors(form, category='warning'):
-    """Flash all errors for a form."""
-    for field, errors in form.errors.items():
-        for error in errors:
-            flash('{0} - {1}'.format(getattr(form, field).label.text, error), category)
 
 
 def split_integers(total: int, fractions: Sequence[float]) -> List[int]:

@@ -1,13 +1,13 @@
-from typing import Sequence, Union, Iterable
 import csv
 from io import IOBase
+from typing import Iterable, Sequence, Union
 
 import numpy
+import pandas
 import torch
+from pandas import DataFrame
 from torch import Tensor
 from torch.nn import Embedding
-import pandas
-from pandas import DataFrame
 
 TORCH_INT_DTYPES = (torch.uint8, torch.int8, torch.short, torch.int, torch.long)
 

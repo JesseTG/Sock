@@ -4,32 +4,27 @@
 import csv
 import sys
 import time
-from typing import Callable, Sequence, Dict, Union
-
-import pytest
-from pytest import Item, Session
-from webtest import TestApp
-
-import torch.multiprocessing
-import torch
-from torch.nn import Module, DataParallel
-from torch.optim import Optimizer
-import ignite
-from ignite.engine import Events, Engine
-
-import pandas
-from pandas import DataFrame
+from typing import Callable, Dict, Sequence, Union
 
 import cpuinfo
+import ignite
+import pandas
+import pytest
+import torch
+import torch.multiprocessing
+from ignite.engine import Engine, Events
+from pandas import DataFrame
+from pytest import Item, Session
+from torch.nn import DataParallel, Module
+from torch.optim import Optimizer
 
-from sockpuppet.app import create_app
-from sockpuppet.database import db as _db
-from sockpuppet.settings import TestConfig
 from sockpuppet.model.data import WordEmbeddings, tokenize
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.dataset.cresci import CresciTweetDataset, CresciUserDataset, CresciTensorTweetDataset
-from sockpuppet.model.dataset.nbc import NbcTweetDataset, NbcTweetTensorDataset
+from sockpuppet.model.dataset.cresci import CresciTensorTweetDataset, CresciTweetDataset, CresciUserDataset
 from sockpuppet.model.dataset.five38 import Five38TweetDataset, Five38TweetTensorDataset
+from sockpuppet.model.dataset.nbc import NbcTweetDataset, NbcTweetTensorDataset
+from sockpuppet.model.nn import ContextualLSTM
+from sockpuppet.settings import TestConfig
+
 from .marks import *
 
 FIVE38_TWEET_PATH = f"{TestConfig.TRAINING_DATA_PATH}/538/tweets.csv"

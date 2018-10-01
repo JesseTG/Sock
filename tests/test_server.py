@@ -1,21 +1,21 @@
-import pytest
-
-from importlib.resources import read_text, read_binary
-import time
-from typing import Sequence
-from threading import Event, Thread
 import asyncio
+import logging
+import time
 from asyncio import Future
+from importlib.resources import read_binary, read_text
+from threading import Event, Thread
+from typing import Sequence
 
+import pytest
 import zmq
 from zmq.asyncio import Context, Socket
+from zmq.log.handlers import PUBHandler
 from zmq.utils.jsonapi import jsonmod
 
-from sockpuppet.settings import TestConfig
+import main
 from sockpuppet.model.data import WordEmbeddings
 from sockpuppet.model.nn import ContextualLSTM
-
-import main
+from sockpuppet.settings import TestConfig
 
 DEFAULT_TIMEOUT = 3000  # ms
 
