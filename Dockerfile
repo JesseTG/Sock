@@ -1,4 +1,4 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.6-alpine3.7
+FROM tiangolo/uwsgi-nginx-flask:python3.7-alpine3.7
 
 ENV WORKDIR /app 
 ENV FLASK_APP ${WORKDIR}/main.py
