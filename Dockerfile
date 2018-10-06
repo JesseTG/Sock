@@ -5,6 +5,8 @@ WORKDIR ${WORKDIR}
 
 COPY . ${WORKDIR}
 
-RUN pip3 install --no-cache-dir --requirement requirements/prod.txt
+# TODO: mount word embeddings and model as a volume
+# TODO: Open a UNIX socket for logging, and one for communication
+RUN pip3.7 install --no-cache-dir --compile --requirement requirements/prod.txt
 
-EXPOSE 80 443
+CMD [ "python3.7", "-m", "main" ]
