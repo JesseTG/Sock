@@ -92,6 +92,7 @@ def tokenize(input: str) -> List[str]:
 
 
 def main():
+    # TODO: Move this function to a module in sock.cli
     for line in fileinput.input():
         print(' '.join(tokenize(line)))
 
