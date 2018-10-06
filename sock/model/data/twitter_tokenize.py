@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-import fileinput
 import re
 from typing import List
 
@@ -89,12 +86,3 @@ def tokenize(input: str) -> List[str]:
         return ["<empty>"]
 
     return input
-
-
-def main():
-    # TODO: Move this function to a module in sock.cli
-    for line in fileinput.input():
-        print(' '.join(tokenize(line)))
-
-if __name__ == "__main__":
-    main()
