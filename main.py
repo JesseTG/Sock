@@ -28,6 +28,7 @@ CONFIG = DevConfig if __debug__ else ProdConfig
 
 async def main(embeddings: WordEmbeddings, model: ContextualLSTM, address: str, event: Event, context: Context):
     # TODO: Make logging configurable
+    # TODO: Log when the socket is closed
     logging.info("Beginning main event loop")
     socket = context.socket(zmq.REP)  # type: Socket
     logging.info("Created %s", socket)
@@ -43,6 +44,9 @@ async def main(embeddings: WordEmbeddings, model: ContextualLSTM, address: str, 
             if (not isinstance(request, list)) \
                     or len(request) == 0 \
                     or not all(isinstance(t, str) for t in request):
+                    # If we did not get a list... (can't be a Sequence, we don't want just strings)
+                    # ...or if that list is empty...
+                    # ...or if that list isn't made of tweets...
                 await socket.send_json([])
                 continue
 
