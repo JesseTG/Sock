@@ -13,9 +13,9 @@ from torch import LongTensor, Tensor
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset, TensorDataset
 
-from sockpuppet.model.data import WordEmbeddings, sentence_label_pad
-from sockpuppet.model.dataset import LabelDataset
-from sockpuppet.model.nn import ContextualLSTM
+from sock.model.data import WordEmbeddings, sentence_label_pad
+from sock.model.dataset import LabelDataset
+from sock.model.nn import ContextualLSTM
 
 BATCH_SIZES = [100, 250, 500, 1000]
 VALIDATE_EVERY = 100

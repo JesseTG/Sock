@@ -3,8 +3,8 @@
 #PBS -l nodes=1:ppn=28,walltime=168:00:00
 #PBS -q extended
 
-SOCKPUPPET="$HOME/code/Sock-Puppet/sockpuppet"
-TOKENIZE="$SOCKPUPPET/model/data/twitter_tokenize.py"
+SOCK="$HOME/code/Sock/sock"
+TOKENIZE="$SOCK/model/data/twitter_tokenize.py"
 TWITTER_DIR="$HOME/scratch/twitter"
 WORKING_DIR="$HOME/scratch/twitter"
 CUSTOM_GLOVE_DIR="$TWITTER_DIR/custom-glove"
@@ -25,7 +25,7 @@ function tokenize() {
     echo -e "$(date) Tokenizing the tweets in $ARCHIVE"
 
     7z e -so "$ARCHIVE" | \
-        jq --raw-input --raw-output --from-file "$SOCKPUPPET/jq/get-text.jq" | \
+        jq --raw-input --raw-output --from-file "$SOCK/jq/get-text.jq" | \
         python3 -OO "$TOKENIZE" \
     > "$TOKENIZED_DIR/$BASENAME.txt"
 
@@ -75,6 +75,6 @@ echo -e "$(date) Done counting words, results available in $CUSTOM_GLOVE_DIR/voc
 #------------------------------------------------------------------------------
 
 
-source "$SOCKPUPPET/pbs/build-cooccur.pbs"
+source "$SOCK/pbs/build-cooccur.pbs"
 
 echo "$(date) Done building custom GloVe model"

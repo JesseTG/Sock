@@ -5,7 +5,7 @@
 
 module load anaconda/.anaconda
 
-TOKENIZE="$HOME/code/Sock-Puppet/sockpuppet/model/dataset/twitter_tokenize.py"
+TOKENIZE="$HOME/code/Sock/sock/model/dataset/twitter_tokenize.py"
 TWITTER_DIR="$HOME/scratch/twitter"
 TOKENIZED_DIR="$TWITTER_DIR/tokenized"
 

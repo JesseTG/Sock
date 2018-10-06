@@ -6,7 +6,7 @@ from torch.nn import LSTM, Embedding, Linear, Module, ReLU, Sequential, Sigmoid,
 from torch.nn.init import normal_
 from torch.nn.utils.rnn import PackedSequence, pack_padded_sequence, pack_sequence, pad_packed_sequence, pad_sequence
 
-from sockpuppet.model.data import WordEmbeddings
+from sock.model.data import WordEmbeddings
 
 
 class ContextualLSTM(Module):

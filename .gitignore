@@ -2,9 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
-sockpuppet/__pycache__
-sockpuppet/*/__pycache__
-sockpuppet/*/*/__pycache__
+sock/__pycache__
+sock/*/__pycache__
+sock/*/*/__pycache__
 tests/__pycache__
 tests/*/__pycache__
 
@@ -116,7 +116,7 @@ package-lock.json
 .git
 .vscode
 .benchmarks
-sockpuppet/static/
+sock/static/
 *.pt
 *.pth
 *.pkl

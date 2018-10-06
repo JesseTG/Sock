@@ -9,7 +9,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from sockpuppet.model.data import WordEmbeddings
+from sock.model.data import WordEmbeddings
 
 from .common import TweetTensorDataset, _to_int
 

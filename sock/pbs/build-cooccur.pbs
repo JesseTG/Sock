@@ -6,8 +6,8 @@
 module load shared
 module load anaconda/.anaconda
 
-SOCKPUPPET="$HOME/code/Sock-Puppet/sockpuppet"
-TOKENIZE="$SOCKPUPPET/model/data/twitter_tokenize.py"
+SOCK="$HOME/code/Sock/sock"
+TOKENIZE="$SOCK/model/data/twitter_tokenize.py"
 TWITTER_DIR="$HOME/scratch/twitter"
 WORKING_DIR="$HOME/scratch/twitter"
 CUSTOM_GLOVE_DIR="$TWITTER_DIR/custom-glove"
@@ -41,4 +41,4 @@ echo -e "$(date) Done building cooccurrence matrix, results available in $CUSTOM
 
 #------------------------------------------------------------------------------
 
-source "$SOCKPUPPET/pbs/build-shuffle.pbs"
+source "$SOCK/pbs/build-shuffle.pbs"

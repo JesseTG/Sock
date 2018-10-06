@@ -18,10 +18,10 @@ from zmq import Frame, ZMQError
 from zmq.asyncio import Context, Poller, Socket
 from zmq.log.handlers import PUBHandler
 
-from sockpuppet.model.data import PaddedSequence, WordEmbeddings, sentence_pad
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.serial import load, save
-from sockpuppet.settings import DevConfig, ProdConfig
+from sock.model.data import PaddedSequence, WordEmbeddings, sentence_pad
+from sock.model.nn import ContextualLSTM
+from sock.model.serial import load, save
+from sock.settings import DevConfig, ProdConfig
 
 CONFIG = DevConfig if __debug__ else ProdConfig
 

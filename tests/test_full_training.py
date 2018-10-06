@@ -16,11 +16,11 @@ from torch.nn import DataParallel, Module
 from torch.optim import ASGD, SGD, Adadelta, Adagrad, Adam, Optimizer, RMSprop, Rprop
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, RandomSampler, Subset, TensorDataset, random_split
 
-from sockpuppet.model.data import WordEmbeddings, sentence_label_pad, sentence_pad
-from sockpuppet.model.dataset import CresciTensorTweetDataset, Five38TweetTensorDataset, NbcTweetTensorDataset
-from sockpuppet.model.dataset.label import LabelDataset, SingleLabelDataset
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.utils import Metrics, Splits, expand_binary_class, split_integers, to_singleton_row
+from sock.model.data import WordEmbeddings, sentence_label_pad, sentence_pad
+from sock.model.dataset import CresciTensorTweetDataset, Five38TweetTensorDataset, NbcTweetTensorDataset
+from sock.model.dataset.label import LabelDataset, SingleLabelDataset
+from sock.model.nn import ContextualLSTM
+from sock.utils import Metrics, Splits, expand_binary_class, split_integers, to_singleton_row
 
 CHECKPOINT_EVERY = 100
 MAX_EPOCHS = 50

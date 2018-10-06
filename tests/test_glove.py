@@ -4,7 +4,7 @@ from pandas import DataFrame
 from tests.marks import *
 from torch.nn import Embedding
 
-from sockpuppet.model.data import WordEmbeddings
+from sock.model.data import WordEmbeddings
 
 FIRST_ROW_VECTOR = torch.as_tensor([
     0.62415, 0.62476, -0.082335, 0.20101, -0.13741, -0.11431, 0.77909, 2.6356, -0.46351, 0.57465,

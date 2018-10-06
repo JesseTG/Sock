@@ -5,7 +5,7 @@ from torch.utils.data import ConcatDataset, DataLoader, Dataset
 from torch.utils.data.dataloader import default_collate
 from torch.utils.data.sampler import Sampler, SubsetRandomSampler
 
-from sockpuppet.model.data import PaddedSequence, sentence_pad
+from sock.model.data import PaddedSequence, sentence_pad
 
 from .marks import *
 

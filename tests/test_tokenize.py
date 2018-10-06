@@ -1,6 +1,6 @@
 import pytest
 
-from sockpuppet.model.data import tokenize
+from sock.model.data import tokenize
 
 
 @pytest.mark.parametrize("input,expected", [

@@ -6,7 +6,7 @@
 module load shared
 module load anaconda/.anaconda
 
-EXTRACT_BOT_SCRIPT="$HOME/code/Sock-Puppet/sockpuppet/model/data/extract_bots.py"
+EXTRACT_BOT_SCRIPT="$HOME/code/Sock/sock/model/data/extract_bots.py"
 WORKING_DIR="$HOME/scratch/twitter"
 LABELED_DIR="$WORKING_DIR/labeled"
 BOT_DIR="$LABELED_DIR/bot"

@@ -13,13 +13,13 @@ from torch.nn import Module
 from torch.optim import Adam, Optimizer
 from torch.utils.data import ConcatDataset, DataLoader, Dataset, Subset, random_split
 
-from sockpuppet.model.data import WordEmbeddings, tokenize
-from sockpuppet.model.data.batching import sentence_label_pad, sentence_pad
-from sockpuppet.model.dataset import (CresciTweetDataset, Five38TweetDataset, LabelDataset, NbcTweetDataset,
-                                      SingleLabelDataset, TweetTensorDataset)
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.serial import load, save
-from sockpuppet.utils import BOT, NOT_BOT, Metrics, Splits, expand_binary_class, split_integers, to_singleton_row
+from sock.model.data import WordEmbeddings, tokenize
+from sock.model.data.batching import sentence_label_pad, sentence_pad
+from sock.model.dataset import (CresciTweetDataset, Five38TweetDataset, LabelDataset, NbcTweetDataset,
+                                SingleLabelDataset, TweetTensorDataset)
+from sock.model.nn import ContextualLSTM
+from sock.model.serial import load, save
+from sock.utils import BOT, NOT_BOT, Metrics, Splits, expand_binary_class, split_integers, to_singleton_row
 
 
 def positive_int(arg: str) -> int:

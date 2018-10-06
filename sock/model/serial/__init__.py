@@ -3,8 +3,8 @@ from typing import Union, Sequence, Tuple, Optional
 import torch
 from torch.optim import Optimizer
 
-from sockpuppet.model.data import WordEmbeddings
-from sockpuppet.model.nn import ContextualLSTM
+from sock.model.data import WordEmbeddings
+from sock.model.nn import ContextualLSTM
 
 
 # All parameters EXCEPT the embeddings are saved to disk

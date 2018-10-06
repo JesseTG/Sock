@@ -13,9 +13,9 @@ from zmq.log.handlers import PUBHandler
 from zmq.utils.jsonapi import jsonmod
 
 import main
-from sockpuppet.model.data import WordEmbeddings
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.settings import TestConfig
+from sock.model.data import WordEmbeddings
+from sock.model.nn import ContextualLSTM
+from sock.settings import TestConfig
 
 DEFAULT_TIMEOUT = 3000  # ms
 

@@ -18,12 +18,12 @@ from pytest import Item, Session
 from torch.nn import DataParallel, Module
 from torch.optim import Optimizer
 
-from sockpuppet.model.data import WordEmbeddings, tokenize
-from sockpuppet.model.dataset.cresci import CresciTensorTweetDataset, CresciTweetDataset, CresciUserDataset
-from sockpuppet.model.dataset.five38 import Five38TweetDataset, Five38TweetTensorDataset
-from sockpuppet.model.dataset.nbc import NbcTweetDataset, NbcTweetTensorDataset
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.settings import TestConfig
+from sock.model.data import WordEmbeddings, tokenize
+from sock.model.dataset.cresci import CresciTensorTweetDataset, CresciTweetDataset, CresciUserDataset
+from sock.model.dataset.five38 import Five38TweetDataset, Five38TweetTensorDataset
+from sock.model.dataset.nbc import NbcTweetDataset, NbcTweetTensorDataset
+from sock.model.nn import ContextualLSTM
+from sock.settings import TestConfig
 
 from .marks import *
 
@@ -44,7 +44,7 @@ def pytest_report_header(config, startdir):
         f"omp_threads: {torch.get_num_threads()}, cuda_devices: {torch.cuda.device_count()}",
         f"default_dtype: {torch.get_default_dtype()}",
         f"arch: {cpu['arch']}, cores: {cpu['count']}",
-        f"SOCKPUPPET_TRAINING_DATA_PATH: {TestConfig.TRAINING_DATA_PATH}",
+        f"SOCK_TRAINING_DATA_PATH: {TestConfig.TRAINING_DATA_PATH}",
     )
 
 

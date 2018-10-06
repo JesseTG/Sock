@@ -7,7 +7,7 @@
 module load shared
 module load anaconda/.anaconda
 
-WORKING_DIR="$HOME/code/Sock-Puppet"
+WORKING_DIR="$HOME/code/Sock"
 mkdir -p "$WORKING_DIR"
 cd "$WORKING_DIR"
 

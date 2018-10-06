@@ -1,5 +1,5 @@
 ===============================
-Sock Puppet
+Sock
 ===============================
 
 Backend for Don't Bother
@@ -13,12 +13,12 @@ add the following to ``.bashrc`` or ``.bash_profile``.
 
 .. code-block:: bash
 
-    export SOCKPUPPET_SECRET='something-really-secret'
+    export SOCK_SECRET='something-really-secret'
 
 Run the following commands to bootstrap your environment ::
 
-    git clone https://github.com/JesseTG/sockpuppet
-    cd sockpuppet
+    git clone https://github.com/JesseTG/Sock
+    cd Sock
     pip install -r requirements/dev.txt
     npm install
     npm start  # run the webpack dev server and flask server using concurrently

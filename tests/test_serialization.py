@@ -6,9 +6,9 @@ import pytest
 import torch
 from tests.marks import *
 
-from sockpuppet.model.data import WordEmbeddings
-from sockpuppet.model.nn import ContextualLSTM
-from sockpuppet.model.serial import load, save
+from sock.model.data import WordEmbeddings
+from sock.model.nn import ContextualLSTM
+from sock.model.serial import load, save
 
 
 @pytest.fixture
