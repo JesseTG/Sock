@@ -12,3 +12,6 @@ pyzmq==17.*
 # Data
 pandas==0.23.*
 simplejson==3.*
+
+# Health Check
+lorem==0.1.1
