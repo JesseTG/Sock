@@ -10,7 +10,7 @@ class Config(object):
     DEBUG = False
     MODEL_DEVICE = os.environ.get("SOCK_MODEL_DEVICE", "cpu")
     PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, os.pardir))
-    SERVER_BIND_ADDRESS = os.environ.get("SOCK_SERVER_BIND_ADDRESS", "ipc:///tmp/sock-sockpuppet")
+    SERVER_BIND_ADDRESS = os.environ.get("SOCK_SERVER_BIND_ADDRESS", "ipc:///tmp/sock-server")
     TESTING = False
     TRAINED_MODEL_PATH = os.environ.get("SOCK_TRAINED_MODEL_PATH")
     TRAINING_DATA_PATH = os.environ.get("SOCK_TRAINING_DATA_PATH", os.path.expanduser("~/data"))
@@ -35,5 +35,5 @@ class TestConfig(Config):
     """Test configuration."""
 
     DEBUG = True
-    SERVER_BIND_ADDRESS = os.environ.get("SOCK_SERVER_BIND_ADDRESS", "inproc://test-bind")
+    SERVER_BIND_ADDRESS = os.environ.get("SOCK_SERVER_BIND_ADDRESS", "inproc://sock-server")
     TESTING = True
