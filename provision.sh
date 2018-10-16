@@ -1,5 +1,8 @@
 #!/usr/bin/env sh
 
+set -e
+# Quit in error if any of these commands fails
+
 apt-get update
 apt-get dist-upgrade --yes
 apt-get install --no-install-recommends --yes gcc libc-dev
