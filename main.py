@@ -4,10 +4,10 @@
 
 import asyncio
 import concurrent.futures
-from functools import partial
 import logging
 import time
 from collections import namedtuple
+from functools import partial
 from threading import Event
 from typing import Sequence
 
@@ -15,8 +15,8 @@ import simplejson
 import torch
 import zmq
 from jsonrpc import Dispatcher, JSONRPCResponseManager
-from jsonrpc.jsonrpc2 import JSONRPC20Request, JSONRPC20Response
 from jsonrpc.exceptions import JSONRPCDispatchException, JSONRPCInvalidParams
+from jsonrpc.jsonrpc2 import JSONRPC20Request, JSONRPC20Response
 from simplejson.errors import JSONDecodeError
 from torch import Tensor
 from zmq import Frame, ZMQError
