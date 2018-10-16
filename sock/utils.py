@@ -76,6 +76,7 @@ Metrics = namedtuple("Metrics", ("accuracy", "loss", "precision", "recall"))
 NoneType = type(None)
 
 JSONScalar = Union[NoneType, bool, str, Real]
-
+MAX_JSON_INT = (2**53) - 1
+MIN_JSON_INT = -MAX_JSON_INT
 NOT_BOT = 0
 BOT = 1
