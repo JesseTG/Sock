@@ -4,7 +4,8 @@ import time
 from asyncio import Future
 from importlib.resources import read_binary, read_text
 from threading import Event, Thread
-from typing import Sequence
+from typing import Sequence, Dict
+from jsonrpc.jsonrpc import JSONRPCRequest
 
 import pytest
 import zmq
@@ -91,10 +92,11 @@ def test_client_connects_to_server(client: Socket):
 @pytest.mark.asyncio
 @pytest.mark.usefixture("server")
 async def test_no_unnecessary_blocking(client: Socket):
-    request = jsonmod.loads(read_text("tests.data", "1-request.json"))
+    request = read_text("tests.data", "1-request.json")
 
     start = time.time()
-    assert (await client.send_json(request)) is None
+
+    assert (await client.send_string(request)) is None
 
     events = await client.poll(timeout=DEFAULT_TIMEOUT)
     assert events == 1
@@ -115,18 +117,29 @@ async def test_no_unnecessary_blocking(client: Socket):
     "empty-tweets.json",
 ])
 async def test_make_request(client: Socket, input: str):
-    request = jsonmod.loads(read_text("tests.data", input))
+    request = jsonmod.loads(read_text("tests.data", input))  # type: Dict
 
     assert (await client.send_json(request)) is None
 
-    events = await client.poll(timeout=DEFAULT_TIMEOUT)
+    events = await client.poll(timeout=DEFAULT_TIMEOUT)  # type: int
     assert events == 1
 
-    response = await client.recv_json()
+    response = await client.recv_json()  # type: Dict
     assert response is not None
-    assert isinstance(response, Sequence)
-    assert len(response) == len(request)
-    assert all(isinstance(b, bool) for b in response)
+    assert isinstance(response, Dict)
+
+    assert "jsonrpc" in response
+    assert response["jsonrpc"] == "2.0"
+
+    assert "id" in response
+    assert isinstance(response["id"], int)
+    # TODO: Test ID
+
+    assert "result" in response
+    result = response["result"]
+    assert isinstance(result, Sequence)
+    assert len(result) == len(request["params"])
+    assert all(isinstance(b, bool) for b in result)
 
 
 @pytest.mark.asyncio
@@ -145,7 +158,7 @@ async def test_make_request(client: Socket, input: str):
     b'\0\0\0\0',
     b'{',
     b'null',
-    read_binary("tests.data", "wrong-type.json"),
+    pytest.param(read_binary("tests.data", "wrong-type.json"), id="wrong type"),
     pytest.param(b'\0' * 1000000, id="100000 null bytes"),
 ])
 async def test_server_rejects_bad_request(client: Socket, input: bytes):
@@ -156,32 +169,64 @@ async def test_server_rejects_bad_request(client: Socket, input: bytes):
 
     response = await client.recv_json()
     assert response is not None
-    assert isinstance(response, Sequence)
-    assert len(response) == 0
+    assert isinstance(response, Dict)
+
+    assert "jsonrpc" in response
+    assert response["jsonrpc"] == "2.0"
+
+    assert "error" in response
+    error = response["error"]
+    assert isinstance(error, Dict)
+
+    assert "code" in error
+    code = error["code"]
+    assert isinstance(code, int)
+
+    assert "message" in error
+    assert isinstance(error["message"], str)
+
+    assert "id" in response
+    if code in (-32700, -32600):  # Parse error, Invalid Request
+        assert response["id"] is None
+    else:
+        assert isinstance(response["id"], int)
+        # TODO: Test ID value
+
+# TODO: Server works fine but I need to update these tests
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixture("server")
 async def test_server_handles_concurrent_connections_sequential(clients: Sequence[Socket]):
     for i, socket in enumerate(clients, start=1):
-        message = [str(i)] * i
-        assert (await socket.send_json(message)) is None
+        request = {
+            "jsonrpc": "2.0",
+            "id": i,
+            "method": "guess",
+            "params": [str(i)] * i,
+        }
+        assert (await socket.send_json(request)) is None
 
         events = await socket.poll(timeout=DEFAULT_TIMEOUT)
         assert events == 1
 
         response = await socket.recv_json()
         assert response is not None
-        assert isinstance(response, Sequence)
-        assert len(response) == i
+        assert isinstance(response, Dict)
+        assert len(response["result"]) == i
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixture("server")
 async def test_server_handles_concurrent_connections_interleaved(clients: Sequence[Socket]):
     for i, socket in enumerate(clients, start=1):
-        message = [str(i)] * i
-        assert (await socket.send_json(message)) is None
+        request = {
+            "jsonrpc": "2.0",
+            "id": i,
+            "method": "guess",
+            "params": [str(i)] * i,
+        }
+        assert (await socket.send_json(request)) is None
 
     for i, socket in enumerate(clients, start=1):
         events = await socket.poll(timeout=DEFAULT_TIMEOUT)
@@ -190,8 +235,8 @@ async def test_server_handles_concurrent_connections_interleaved(clients: Sequen
     for i, socket in enumerate(clients, start=1):
         response = await socket.recv_json()
         assert response is not None
-        assert isinstance(response, Sequence)
-        assert len(response) == i
+        assert isinstance(response, Dict)
+        assert len(response["result"]) == i
 
 
 # @pytest.mark.asyncio
@@ -223,4 +268,4 @@ async def test_server_survives_dead_client(client: Socket, context: Context):
     assert events == 1
 
     response = await client.recv_json()
-    assert len(response) == len(request2)
+    assert len(response["result"]) == len(request2["params"])

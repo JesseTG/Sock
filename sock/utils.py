@@ -3,7 +3,8 @@
 
 from collections import defaultdict, namedtuple
 from functools import lru_cache
-from typing import Dict, List, Sequence, Tuple
+from numbers import Real
+from typing import Dict, List, Sequence, Tuple, Union
 
 import torch
 from torch import Tensor
@@ -72,7 +73,9 @@ TORCH_DTYPES = {
 
 Splits = namedtuple("Splits", ("full", "training", "validation", "testing"))
 Metrics = namedtuple("Metrics", ("accuracy", "loss", "precision", "recall"))
+NoneType = type(None)
 
+JSONScalar = Union[NoneType, bool, str, Real]
 
 NOT_BOT = 0
 BOT = 1

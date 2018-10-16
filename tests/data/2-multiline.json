@@ -1,4 +1,9 @@
-[
-    "I'm going nuts",
-    "It's okay"
-]
+{
+    "jsonrpc": "2.0",
+    "id": 1555,
+    "method": "guess",
+    "params": [
+        "I'm going nuts",
+        "This is fine"
+    ]
+}

@@ -8,6 +8,8 @@ py-cpuinfo==4.*
 
 # Communication
 pyzmq==17.*
+aiozmq==0.8.*
+json-rpc==1.11.*
 
 # Data
 pandas==0.23.*

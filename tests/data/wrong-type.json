@@ -1,1 +1,10 @@
-["alpha", "beta", 3]
+{
+    "jsonrpc": "2.0",
+    "id": 1402994,
+    "method": "guess",
+    "params": [
+        "alpha",
+        "beta",
+        3
+    ]
+}
