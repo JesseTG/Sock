@@ -37,7 +37,7 @@ async def main(embeddings: WordEmbeddings, model: ContextualLSTM, address: str, 
     # TODO: Make logging configurable
     # TODO: Log when the socket is closed
     logging.info("Beginning main event loop")
-    socket = context.socket(zmq.REP)  # type: Socket
+    socket = context.socket(getattr(zmq, CONFIG.SERVER_SOCKET_TYPE))  # type: Socket
     logging.info("Created %s", socket)
     socket.bind(address)
     logging.info("Bound socket to %s", address)
