@@ -17,6 +17,8 @@ mkdir -p "$CUSTOM_GLOVE_DIR"
 cd "$WORKING_DIR"
 
 MEMORY=100
+WINDOW_SIZE=10
+VERBOSE=0
 
 ###############################################################################
 ## Building coooccurrence matrix
@@ -29,10 +31,11 @@ OVERFLOW_DIR="$CUSTOM_GLOVE_DIR/overflow"
 mkdir -p "$OVERFLOW_DIR"
 
 cooccur \
-    -verbose 3 \
+    -verbose "$VERBOSE" \
     -memory "$MEMORY" \
     -vocab-file "$CUSTOM_GLOVE_DIR/vocab.txt" \
     -overflow-file "$OVERFLOW_DIR/overflow" \
+    -window-size "$WINDOW_SIZE" \
     < "$CUSTOM_GLOVE_DIR/corpus.txt" \
     > "$CUSTOM_GLOVE_DIR/cooccurrences.bin"
 

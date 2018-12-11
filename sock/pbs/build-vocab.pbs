@@ -20,5 +20,5 @@ mkdir -p "$CUSTOM_GLOVE"
 cd "$WORKING_DIR"
 
 echo "Start build-vocab.pbs at $(date)"
-cat "$WORKING_DIR/corpus.txt" | vocab_count -verbose 2 -min-count 10 > "$CUSTOM_GLOVE/vocab.txt"
+cat "$WORKING_DIR/corpus.txt" | vocab_count -verbose 0 -min-count 10 > "$CUSTOM_GLOVE/vocab.txt"
 echo "End build-vocab.pbs at $(date)"

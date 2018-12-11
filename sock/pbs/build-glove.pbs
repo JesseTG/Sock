@@ -20,9 +20,10 @@ cd "$WORKING_DIR"
 ## Training the GloVe model
 ###############################################################################
 
-VECTOR_SIZE=100
-ITER=25
+VECTOR_SIZE=50
+ITER=24
 THREADS="$(nproc)"
+CHECKPOINT_EVERY=3
 
 echo -e "$(date) Training GloVe model"
 echo -e "-vector-size = $VECTOR_SIZE"
@@ -36,7 +37,9 @@ glove \
     -gradsq-file "$CUSTOM_GLOVE_DIR/gradsq" \
     -vector-size "$VECTOR_SIZE" \
     -iter "$ITER" \
-    -threads "$THREADS"
+    -threads "$THREADS" \
+    -checkpoint-every "$CHECKPOINT_EVERY" \
+    -verbose 0
 
 echo -e "$(date) Done training GloVe model, available in $CUSTOM_GLOVE_DIR/glove"
 
