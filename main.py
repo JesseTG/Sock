@@ -35,10 +35,14 @@ Guess = namedtuple("Guess", ["id", "type", "status"])
 SOCKET_PERMISSIONS = stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH
 SOCKET_DIR_PERMISSIONS = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
 
-async def main(embeddings: WordEmbeddings, model: ContextualLSTM, address: str, event: Event, context: Context, dispatcher: Dispatcher=Dispatcher()):
-    # TODO: Make logging configurable
-    # TODO: Log when the socket is closed
-    logging.info("Beginning main event loop")
+async def main(
+    embeddings: WordEmbeddings,
+    model: ContextualLSTM,
+    address: str,
+    event: Event,
+    context: Context,
+    dispatcher: Dispatcher=Dispatcher()
+):
     socket = context.socket(getattr(zmq, CONFIG.SERVER_SOCKET_TYPE))  # type: Socket
     logging.info("Created %s", socket)
     # TODO: Log more details about the socket
