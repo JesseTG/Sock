@@ -1,6 +1,7 @@
 import csv
 from io import IOBase
 from typing import Iterable, Sequence, Union
+from pathlib import Path
 
 import numpy
 import pandas
@@ -14,7 +15,7 @@ TORCH_INT_DTYPES = (torch.uint8, torch.int8, torch.short, torch.int, torch.long)
 
 class WordEmbeddings:
     def __init__(self, path: Union[DataFrame, str, IOBase], device="cpu", pinned=False):
-        if isinstance(path, (str, IOBase)):
+        if isinstance(path, (str, IOBase, Path)):
             data = self._load_frame(path)
         elif isinstance(path, DataFrame):
             data = path
