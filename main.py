@@ -151,17 +151,70 @@ if __name__ == '__main__':
     # reason: ZMQ_SERVER scales better (responses don't have to immediately follow requests)
     # TODO: Make server, when interrupted, print more informative info
     context = Context.instance()  # type: Context
-    log_handler = PUBHandler("tcp://*:5558", context=context)
-    # TODO: Make underlying socket configurable
     logging.basicConfig(
-        format='[%(levelname)s %(asctime)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-        level=logging.INFO,
-        handlers=[logging.StreamHandler(), log_handler]
+        format=CONFIG.LOG_FORMAT,
+        datefmt=CONFIG.LOG_DATE_FORMAT,
+        level=CONFIG.LOG_LEVEL,
+        handlers=[logging.StreamHandler()]
     )
-    logging.info(f"zmq version {zmq.zmq_version()}")
-    logging.info(f"pyzmq version {zmq.pyzmq_version()}")
-    logging.info("Running Sock Puppet")
+
+    # TODO: cpuinfo
+    logging.info("ZMQ:")
+    logging.info("  zmq version: %s", zmq.zmq_version())
+    logging.info("  pyzmq version: %s", zmq.pyzmq_version())
+    logging.info("  zmq includes: %s", zmq.get_includes())
+    logging.info("  zmq library dirs: %s", zmq.get_library_dirs())
+    logging.info("  has: %s", [c for c in ZMQ_CAPABILITIES if zmq.has(c)])
+    logging.info("PyTorch:")
+    logging.info("  version: %s", torch.__version__)
+    logging.info("  CUDA available: %s", torch.cuda.is_available())
+    logging.info("  CUDA version: %s", torch.version.cuda)
+    logging.info("  CUDNN available: %s", torch.backends.cudnn.is_available())
+    logging.info("  Debug build: %s", torch.version.debug)
+    logging.info("  Default dtype: %s", torch.get_default_dtype())
+    logging.info("  MKL available: %s", torch.backends.mkl.is_available())
+    logging.info("  OMP threads: %d", torch.get_num_threads())
+    logging.info("socket:")
+    logging.info("  fqdn: %s", socket.getfqdn())
+    logging.info("  has_ipv6: %s", socket.has_ipv6)
+    logging.info("  hostname: %s", socket.gethostname())
+    logging.info("  interfaces: %s", [i[1] for i in socket.if_nameindex()])
+    logging.info("App config:")
+    logging.info("  Environment: %s", CONFIG.__name__)
+    logging.info("  MODEL_DEVICE: %s", CONFIG.MODEL_DEVICE)
+    logging.info("  SERVER_BIND_ADDRESS: %s", CONFIG.SERVER_BIND_ADDRESS)
+    logging.info("  SERVER_SOCKET_TYPE: %s", CONFIG.SERVER_SOCKET_TYPE)
+    logging.info("  TRAINED_MODEL_PATH: %s", CONFIG.TRAINED_MODEL_PATH)
+    logging.info("  WORD_EMBEDDING_PATH: %s", CONFIG.WORD_EMBEDDING_PATH)
+    logging.info("os:")
+    logging.info("  ctermid: %s", os.ctermid())
+    logging.info("  cwd: %s", os.getcwd())
+    logging.info("  groups: %s", os.getgroups())
+    logging.info("  pgid: %d", os.getpgid(0))
+    logging.info("  pgrp: %d", os.getpgrp())
+    logging.info("  pid: %d", os.getpid())
+    logging.info("  ppid: %d", os.getppid())
+    logging.info("  priority_process: %d", os.getpriority(os.PRIO_PROCESS, 0))
+    logging.info("  priority_pgrp: %d", os.getpriority(os.PRIO_PGRP, 0))
+    logging.info("  priority_user: %d", os.getpriority(os.PRIO_USER, 0))
+    logging.info("  resuid: ruid=%d, euid=%d, suid=%d", *os.getresuid())
+    logging.info("  resgid: rgid=%d, egid=%d, sgid=%d", *os.getresgid())
+    logging.info("  sid: %d", os.getsid(0))
+    logging.info("  supports_bytes_environ: %s", os.supports_bytes_environ)
+    logging.info("  uname: %s", os.uname())
+    logging.info("  cpu_count: %d", os.cpu_count())
+    logging.info("platform:")
+    logging.info("  %s", platform.platform())
+    logging.info("  python_build: %s", platform.python_build())
+    logging.info("  python_compiler: %s", platform.python_compiler())
+    logging.info("  python_branch: %s", platform.python_branch())
+    logging.info("  python_implementation: %s", platform.python_implementation())
+    logging.info("  python_revision: %s", platform.python_revision())
+    logging.info("  python_version: %s", platform.python_version())
+    logging.info("getpass:")
+    logging.info("  user: %s", getpass.getuser())
+
+    logging.info("Running Sock")
 
     embeddings = WordEmbeddings(CONFIG.WORD_EMBEDDING_PATH, CONFIG.MODEL_DEVICE)
     logging.info("Loaded %dD embeddings from %s onto %s", embeddings.dim,
