@@ -11,7 +11,8 @@ from ignite.handlers import EarlyStopping, Timer
 from ignite.metrics import BinaryAccuracy, Loss, Precision, Recall
 from torch.nn import Module
 from torch.optim import Adam, Optimizer
-from torch.utils.data import ConcatDataset, DataLoader, Dataset, Subset, random_split
+from torch.utils.data import ConcatDataset, DataLoader, Dataset, random_split
+from torch.utils.data.dataset import Subset
 
 from sock.model.data import WordEmbeddings, tokenize
 from sock.model.data.batching import sentence_label_pad, sentence_pad
