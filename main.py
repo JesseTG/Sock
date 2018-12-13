@@ -131,8 +131,11 @@ if __name__ == '__main__':
     embeddings = WordEmbeddings(CONFIG.WORD_EMBEDDING_PATH, CONFIG.MODEL_DEVICE)
     logging.info("Loaded %dD embeddings from %s onto %s", embeddings.dim,
                  CONFIG.WORD_EMBEDDING_PATH, embeddings.device)
+    # TODO: Log memory usage on disk, and in RAM
 
     model = load(embeddings, CONFIG.TRAINED_MODEL_PATH, CONFIG.MODEL_DEVICE)
+    # TODO: Load the embeddings into shared memory
+
     event = Event()
     logging.info("Loaded trained model from %s onto %s", CONFIG.TRAINED_MODEL_PATH, model.device)
     asyncio.run(main(embeddings, model, CONFIG.SERVER_BIND_ADDRESS, event, context), debug=CONFIG.DEBUG)
