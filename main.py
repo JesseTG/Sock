@@ -92,7 +92,8 @@ async def main(
                 # TODO: Log ID of request
                 dispatch = partial(JSONRPCResponseManager.handle, request, dispatcher)
                 # response = await loop.run_in_executor(executor, dispatch)  # type: JSONRPC20Response
-                response = dispatch()
+                response = dispatch()  # type: JSONRPC20Response
+
                 await socket.send_json(response.data)
                 logging.info("REP: %s", response._id)
                 logging.debug("REP: %s", response)
