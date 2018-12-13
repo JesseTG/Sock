@@ -105,6 +105,8 @@ async def main(embeddings: WordEmbeddings, model: ContextualLSTM, address: str, 
 # - pub
 # - pull
 
+ZMQ_CAPABILITIES = ("ipc", "pgm", "tipc", "norm", "curve", "gssapi", "draft")
+
 if __name__ == '__main__':
     # TODO: Switch socket from ZMQ_REP to ZMQ_SERVER once it's stable
     # reason: ZMQ_SERVER scales better (responses don't have to immediately follow requests)
