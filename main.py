@@ -41,6 +41,8 @@ async def main(embeddings: WordEmbeddings, model: ContextualLSTM, address: str, 
     logging.info("Beginning main event loop")
     socket = context.socket(getattr(zmq, CONFIG.SERVER_SOCKET_TYPE))  # type: Socket
     logging.info("Created %s", socket)
+    # TODO: Log more details about the socket
+    # TODO: Put the entire socket in a with statement
     socket.bind(address)
     logging.info("Bound socket to %s", address)
 
