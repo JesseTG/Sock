@@ -50,6 +50,28 @@ async def main(
     socket.bind(address)
     logging.info("Bound socket to %s", address)
 
+    if address.startswith("ipc://"):
+        # If this is a Unix socket...
+        # TODO: Handle errors
+        #  - socket path exists and is not a socket
+        #  - cannot change socket permissions
+        #  - cannot create socket, directories don't exist
+        socket_path = pathlib.Path(address.replace("ipc://", ""))
+        logging.info("Server address %s is a Unix socket", socket_path)
+
+        socket_path.chmod(SOCKET_PERMISSIONS)
+        socket_stat = socket_path.stat()  # type: stat_result
+        logging.info("Set permissions to %o", socket_stat.st_mode)
+        # TODO: Make this part more robust
+        # - Use GIDs and UIDs
+        # - Use umasks
+        for p in list(socket_path.parents)[:-1]:
+            try:
+                p.chmod(SOCKET_DIR_PERMISSIONS)
+                logging.info("Set permissions of %s to %o", p, SOCKET_DIR_PERMISSIONS)
+            except:
+                logging.warning("Failed to set permissions of %s to %o", p, SOCKET_DIR_PERMISSIONS)
+
     loop = asyncio.get_running_loop()
 
     @dispatcher.add_method
