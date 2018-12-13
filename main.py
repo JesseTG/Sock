@@ -99,13 +99,11 @@ async def main(
                 logging.debug("REP: %s", response)
 
             except ZMQError as e:
-                print(e)
                 logging.exception("%s: %s", type(e).__name__, e)
             except Exception as e:
                 logging.exception("%s: %s", type(e).__name__, e)
                 break
             # TODO: Routing ID goes here once SERVER sockets are stable
-            # TODO: Need a better protocol, mostly to handle errors
 
     socket.close()
     # TODO: Delete the socket once the app ends
