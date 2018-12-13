@@ -65,6 +65,7 @@ async def main(
                 data="params must be a nonempty tuple of strings"
             )
 
+        logging.info("REQ: %d tweets", len(params))
         with torch.no_grad():
             encoding = [embeddings.encode(e) for e in params]  # type: Sequence[Tensor]
             padded = sentence_pad(encoding)  # type: PaddedSequence
@@ -76,21 +77,25 @@ async def main(
 
     @dispatcher.add_method
     def ping():
+        logging.info("PING")
         return "pong"
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
+        # TODO: Do I really need this executor?
+        logging.info("Beginning main event loop")
         while not event.is_set():
             # TODO: Don't busy loop, use poll or something
             # TODO: Event doesn't terminate loop if blocked in a socket call
             try:
                 request = await socket.recv_string()  # type: str
+                logging.debug("REQ: %s", request)
+                # TODO: Log ID of request
                 dispatch = partial(JSONRPCResponseManager.handle, request, dispatcher)
-                logging.info("Received %s", request)
-
                 # response = await loop.run_in_executor(executor, dispatch)  # type: JSONRPC20Response
                 response = dispatch()
                 await socket.send_json(response.data)
-                logging.info("Sent %s", response)
+                logging.info("REP: %s", response._id)
+                logging.debug("REP: %s", response)
 
             except ZMQError as e:
                 print(e)
@@ -102,6 +107,8 @@ async def main(
             # TODO: Need a better protocol, mostly to handle errors
 
     socket.close()
+    # TODO: Delete the socket once the app ends
+    logging.info("Socket at %s closed", address)
 
 # possible socket types for receving requests:
 # - ZMQ_SERVER (most likely)
