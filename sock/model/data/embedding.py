@@ -20,7 +20,7 @@ class WordEmbeddings:
         elif isinstance(path, DataFrame):
             data = path
         else:
-            raise TypeError(f"Expected a str, open file, or DataFrame, got {path}")
+            raise TypeError(f"Expected a str, open file, Path, or DataFrame, got {path}")
 
         # self.words = data[0]
         # No need to keep around the wordlist separately, but if so we can just keep the dataframe
