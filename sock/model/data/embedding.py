@@ -28,8 +28,10 @@ class WordEmbeddings:
         if data[0][0] != "<pad>":
             raise ValueError(f"First word must be '<pad>', but it's {data[0][0]}")
 
-        if data[0][1] != "<unk>":
-            raise ValueError(f"Second word must be '<unk>', but it's {data[0][1]}")
+        if data[0][1] != "<unknown>":
+            raise ValueError(f"Second word must be '<unknown>', but it's {data[0][1]}")
+
+        # TODO: Verify no duplicate words
 
         self._dim = int(data.get_dtype_counts().float64)
         self.vectors = torch.as_tensor(data.iloc[:, 1:].values, dtype=torch.float, device=device)  # type: Tensor
@@ -44,8 +46,8 @@ class WordEmbeddings:
         # torch.half isn't available for index_select, so we'll just use torch.float
 
         self.indices = {word: index for index, word in enumerate(data[0])}
-        # note: must prepend a <unk> zero vector to embedding file
-        # do so with python3 -c 'print("<unk>", *([0.0]*25))' >> the_data_file.txt
+        # note: must prepend a <unknown> zero vector to embedding file
+        # do so with python3 -c 'print("<unknown>", *([0.0]*25))' >> the_data_file.txt
 
     def _load_frame(self, file):
         return pandas.read_table(
