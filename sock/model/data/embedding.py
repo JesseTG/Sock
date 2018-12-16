@@ -28,8 +28,8 @@ class WordEmbeddings:
         if data[0][0] != "<pad>":
             raise ValueError(f"First word must be '<pad>', but it's {data[0][0]}")
 
-        if data[0][1] != "<unknown>":
-            raise ValueError(f"Second word must be '<unknown>', but it's {data[0][1]}")
+        if data[0][1] not in ("<unknown>", "<unk>"):
+            raise ValueError(f"Second word must be '<unknown>' or '<unk>', but it's {data[0][1]}")
 
         # TODO: Verify no duplicate words
 
