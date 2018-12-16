@@ -9,7 +9,7 @@ module load anaconda/.anaconda
 cd "$HOME/code/Sock"
 
 python3 -W ignore::RuntimeWarning -m sock.cli.train \
-    --glove "$HOME/data/glove/glove.custom.50d.txt" \
+    --glove "$HOME/data/glove/glove.custom.25d.txt" \
     --bots "$HOME/data/538/tweets.csv" \
     --humans "$HOME/data/cresci-2017/datasets_full.csv/genuine_accounts.csv/tweets.csv" \
-    --output "$HOME/trained-50-custom-glove.pt"
+    --output "$HOME/trained-25-custom-glove.pt"

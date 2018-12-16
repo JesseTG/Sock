@@ -20,7 +20,7 @@ cd "$WORKING_DIR"
 ## Training the GloVe model
 ###############################################################################
 
-VECTOR_SIZE=50
+VECTOR_SIZE=25
 ITER=24
 THREADS="$(nproc)"
 CHECKPOINT_EVERY=3
