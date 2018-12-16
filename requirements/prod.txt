@@ -1,7 +1,8 @@
 # Everything needed in production
 
 # Algorithms
-torch==0.4.*
+torch==1.*
+numpy==1.15.*
 
 # Additional Information
 py-cpuinfo==4.*
